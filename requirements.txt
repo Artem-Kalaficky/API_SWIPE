@@ -1,0 +1,5 @@
+# django
+django==3.2
+
+# DRF
+djangorestframework==3.13.1
