@@ -1,3 +1,5 @@
+from dj_rest_auth.registration.serializers import RegisterSerializer
+from dj_rest_auth.serializers import LoginSerializer
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
@@ -7,6 +9,11 @@ from allauth.account.adapter import get_adapter
 from allauth.account.utils import setup_user_email
 
 from users.models import Notary
+
+
+class MyLoginSerializer(LoginSerializer):
+    username = None
+    email = serializers.EmailField(required=True, allow_blank=True)
 
 
 class MyRegisterSerializer(serializers.Serializer):
@@ -67,5 +74,5 @@ class MyRegisterSerializer(serializers.Serializer):
 class NotarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Notary
-        fields = ['id', 'first_name', 'last_name', 'telephone', 'email']
+        fields = ['id', 'first_name', 'last_name', 'telephone', 'email', 'avatar']
 # endregion Notary

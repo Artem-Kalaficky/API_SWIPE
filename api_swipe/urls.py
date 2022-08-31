@@ -7,18 +7,23 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework import routers
-
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenVerifyView, TokenRefreshView
 
 urlpatterns = [
     path('', include('users.urls')),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
-    path('account/', include('allauth.urls')),
 
-    # registration with verification email
+    # JWT
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+
+    # User Auth
+    path('account/', include('allauth.urls')),
     path('dj-rest-auth/registration/account-confirm-email/<str:key>/', ConfirmEmailView.as_view()),
     path('register/', RegisterView.as_view()),
     path('login/', LoginView.as_view()),
-    path('logout/', LogoutView.as_view()),
+    # path('logout/', LogoutView.as_view()),
     path('verify-email/', VerifyEmailView.as_view(), name='rest_verify_email'),
     path('account-confirm-email/', VerifyEmailView.as_view(), name='account_email_verification_sent'),
 

@@ -8,6 +8,7 @@ dj-rest-auth[with_social]
 djangorestframework-simplejwt==5.2.0
 drf-spectacular==0.23.1
 drf-spectacular-sidecar==2022.8.1
+drf-psq==1.1.0
 
 # DB
 psycopg2-binary==2.9.3
