@@ -12,6 +12,9 @@ migrate:
 superuser:
 	$(MANAGE) createsuperuser
 
+shell:
+	$(MANAGE) shell
+
 worker:
 	celery -A api_swipe worker --loglevel=info
 

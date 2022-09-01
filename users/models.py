@@ -10,7 +10,7 @@ from .managers import CustomUserManager
 class UserProfile(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField('E-mail', unique=True)
     is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     date_joined = models.DateField(default=timezone.now)
     first_name = models.CharField(max_length=64, blank=True, verbose_name='Имя')
     last_name = models.CharField(max_length=64, blank=True, verbose_name='Фамилия')
@@ -29,8 +29,8 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     is_notices_disabled = models.BooleanField(default=False, verbose_name='Отключить уведомления')
     is_switch_to_agent = models.BooleanField(default=False, verbose_name='Переключить звонки и сообщения на агента')
     in_blacklist = models.BooleanField(default=False, verbose_name='В черном списке')
-    houses = models.ManyToManyField('House', verbose_name='Избранное(ЖК)')
-    apartments = models.ManyToManyField('Apartment', verbose_name='Избранное(Апартаменты)')
+    houses = models.ManyToManyField('House', blank=True, verbose_name='Избранное(ЖК)')
+    apartments = models.ManyToManyField('Apartment', blank=True, verbose_name='Избранное(Апартаменты)')
     is_developer = models.BooleanField(default=False, verbose_name='Застройщик?')
     house = models.OneToOneField('House', on_delete=models.CASCADE, null=True, blank=True, related_name='house',
                                  verbose_name='ЖК')
@@ -107,6 +107,7 @@ class Notary(models.Model):
     last_name = models.CharField(max_length=64, verbose_name='Фамилия')
     telephone = PhoneNumberField(null=True, blank=True, verbose_name='Телефон')
     email = models.EmailField(verbose_name='E-mail')
+    avatar = models.ImageField(upload_to='gallery/', null=True, blank=True, verbose_name='Аватар')
 
     class Meta:
         verbose_name = 'Нотариус'
