@@ -8,7 +8,7 @@ from allauth.utils import email_address_exists
 from allauth.account.adapter import get_adapter
 from allauth.account.utils import setup_user_email
 
-from users.models import Notary
+from users.models import Notary, UserProfile
 
 
 class MyLoginSerializer(LoginSerializer):
@@ -76,3 +76,41 @@ class NotarySerializer(serializers.ModelSerializer):
         model = Notary
         fields = ['id', 'first_name', 'last_name', 'telephone', 'email', 'avatar']
 # endregion Notary
+
+
+# region User Profile
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'first_name', 'last_name', 'telephone', 'email', 'agent_first_name',
+                  'agent_last_name', 'agent_telephone', 'agent_email', 'to_me', 'to_me_and_agent', 'to_agent',
+                  'is_notices_disabled', 'is_switch_to_agent']
+
+
+class UserContactsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'first_name', 'last_name', 'telephone', 'email']
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True}
+        }
+
+
+class UserAgentContactsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'agent_first_name', 'agent_last_name', 'agent_telephone', 'agent_email']
+
+
+class UserManageNoticeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'to_me', 'to_me_and_agent', 'to_agent', 'is_notices_disabled']
+
+
+class UserSwitchNoticesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'is_switch_to_agent']
+# endregion User Profile
