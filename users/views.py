@@ -1,9 +1,10 @@
 from allauth.account.models import EmailAddress
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_psq import Rule, PsqMixin
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, permissions, mixins, status
 from rest_framework.decorators import action
-from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, ListAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -11,9 +12,10 @@ from rest_framework.viewsets import GenericViewSet
 
 from users.models import Notary, UserProfile
 from users.serializers import (
-    NotarySerializer, UserProfileSerializer, UserSwitchNoticesSerializer, UserContactsSerializer,
-    UserAgentContactsSerializer, UserManageNoticeSerializer
+    NotarySerializer, UserProfileSerializer, UserSwitchNoticesSerializer, UserAgentContactsSerializer,
+    UserManageNoticeSerializer, UserSubscriptionSerializer, UserSubscriptionRenewalSerializer, UserListSerializer
 )
+from users.services.subscription_renewal import renew_subscription
 
 
 # region my Permissions
@@ -30,7 +32,6 @@ class NotaryViewSet(PsqMixin,
                     mixins.DestroyModelMixin,
                     mixins.ListModelMixin,
                     GenericViewSet):
-    queryset = Notary.objects.all()
     serializer_class = NotarySerializer
     parser_classes = (MultiPartParser,)
 
@@ -43,35 +44,41 @@ class NotaryViewSet(PsqMixin,
 
 
 # region User Profile
-class UserViewSet(PsqMixin,
-                  mixins.RetrieveModelMixin,
-                  GenericViewSet):
+class UserViewSet(GenericViewSet):
     queryset = UserProfile.objects.filter(is_staff=False, is_developer=False)
     serializer_class = UserProfileSerializer
-    permission_classes = [IsSelf]
 
-    @action(detail=False, methods=['put'], serializer_class=UserContactsSerializer)
-    def change_my_contacts(self, request, pk=None):
-        user = self.request.user
-        email = user.email
-        serializer = UserContactsSerializer(data=request.data)
-        if serializer.is_valid():
-            user.first_name = serializer.validated_data['first_name']
-            user.last_name = serializer.validated_data['last_name']
-            user.telephone = serializer.validated_data['telephone']
-            user.email = serializer.validated_data['email']
-            if email != user.email:
-                EmailAddress.objects.get(user=user).delete()
-                EmailAddress.objects.create(user=user, email=user.email, primary=True, verified=True)
-            user.save()
-            return Response({'status': 'contacts changed successfully'})
-        else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+    @extend_schema(description='Get personal data', methods=['get'])
+    @action(detail=False)
+    def my_profile(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
+    @extend_schema(description='Change personal contacts', methods=['put'])
+    @action(detail=False, methods=['put'], serializer_class=UserProfileSerializer)
+    def change_my_contacts(self, request):
+        serializer = self.serializer_class(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(description='Change contacts for personal agent', methods=['put'])
     @action(detail=False, methods=['put'], serializer_class=UserAgentContactsSerializer)
     def change_agent_contacts(self, request):
+        serializer = self.serializer_class(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(description='Subscription renewal', methods=['put'])
+    @action(detail=False, methods=['put'], serializer_class=UserSubscriptionRenewalSerializer)
+    def renew_subscription(self, request):
+        renew_subscription(request.user)
+        return Response({'status': 'Подписка успешно продлена!'})
+
+    @extend_schema(description='Change status for subscription auto-renewal', methods=['put'])
+    @action(detail=False, methods=['put'], serializer_class=UserSubscriptionSerializer)
+    def change_auto_renewal_status(self, request):
         serializer = self.serializer_class(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -92,5 +99,18 @@ class UserViewSet(PsqMixin,
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 # endregion User Profile
+
+
+# region Moderation
+class UserListViewSet(mixins.ListModelMixin,
+                      GenericViewSet):
+    serializer_class = UserListSerializer
+    permission_classes = [IsAdminUser]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['in_blacklist']
+
+    def get_queryset(self):
+        queryset = UserProfile.objects.filter(is_staff=False, is_developer=False)
+        return queryset
+# endregion Moderation

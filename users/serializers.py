@@ -1,3 +1,4 @@
+from allauth.account.models import EmailAddress
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer
 from django.core.exceptions import ValidationError
@@ -80,17 +81,25 @@ class NotarySerializer(serializers.ModelSerializer):
 
 # region User Profile
 class UserProfileSerializer(serializers.ModelSerializer):
+    def update(self, instance, validated_data):
+        if validated_data.get('email') != instance.email:
+            EmailAddress.objects.filter(user=instance).update(
+                email=validated_data.get('email')
+            )
+        return super().update(instance, validated_data)
+
     class Meta:
         model = UserProfile
-        fields = ['id', 'first_name', 'last_name', 'telephone', 'email', 'agent_first_name',
-                  'agent_last_name', 'agent_telephone', 'agent_email', 'to_me', 'to_me_and_agent', 'to_agent',
-                  'is_notices_disabled', 'is_switch_to_agent']
-
-
-class UserContactsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields = ['id', 'first_name', 'last_name', 'telephone', 'email']
+        fields = (
+            'id', 'first_name', 'last_name', 'telephone', 'email', 'agent_first_name', 'agent_last_name',
+            'agent_telephone', 'agent_email', 'to_me', 'to_me_and_agent', 'to_agent', 'is_notices_disabled',
+            'is_switch_to_agent', 'is_subscribed', 'is_auto_renewal', 'subscription_end_date'
+        )
+        read_only_fields = (
+            'agent_first_name', 'agent_last_name', 'agent_telephone', 'agent_email', 'to_me', 'to_me_and_agent',
+            'to_agent', 'is_notices_disabled', 'is_switch_to_agent', 'is_subscribed', 'is_auto_renewal',
+            'subscription_end_date'
+        )
         extra_kwargs = {
             'first_name': {'required': True},
             'last_name': {'required': True}
@@ -100,17 +109,38 @@ class UserContactsSerializer(serializers.ModelSerializer):
 class UserAgentContactsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ['id', 'agent_first_name', 'agent_last_name', 'agent_telephone', 'agent_email']
+        fields = ['agent_first_name', 'agent_last_name', 'agent_telephone', 'agent_email']
+
+
+class UserSubscriptionRenewalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['subscription_end_date']
+        read_only_fields = ('subscription_end_date',)
+
+
+class UserSubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['is_auto_renewal']
 
 
 class UserManageNoticeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ['id', 'to_me', 'to_me_and_agent', 'to_agent', 'is_notices_disabled']
+        fields = ['to_me', 'to_me_and_agent', 'to_agent', 'is_notices_disabled']
 
 
 class UserSwitchNoticesSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ['id', 'is_switch_to_agent']
+        fields = ['is_switch_to_agent']
 # endregion User Profile
+
+
+# region Moderation
+class UserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ('first_name', 'last_name', 'telephone', 'email', 'in_blacklist')
+# endregion Moderation
