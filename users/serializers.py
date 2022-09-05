@@ -9,7 +9,7 @@ from allauth.utils import email_address_exists
 from allauth.account.adapter import get_adapter
 from allauth.account.utils import setup_user_email
 
-from users.models import Notary, UserProfile
+from users.models import Notary, UserProfile, Ad, Photo, Message, Filter
 
 
 class MyLoginSerializer(LoginSerializer):
@@ -138,9 +138,45 @@ class UserSwitchNoticesSerializer(serializers.ModelSerializer):
 # endregion User Profile
 
 
+# region Chats
+class MessageSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        instance = Message.objects.create(
+            **validated_data, sender=self.context.get('request').user
+        )
+        return instance
+
+    class Meta:
+        model = Message
+        fields = ('sender', 'recipient', 'message', 'image', 'file', 'date')
+        read_only_fields = ('sender', 'date')
+# endregion Chats
+
+
+# region Filters
+class MyFilterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Filter
+        fields = (
+            'id', 'user', 'type', 'status_of_house', 'district', 'microdistrict', 'number_of_rooms', 'price_from',
+            'price_up_to', 'area_from', 'area_up_to', 'purpose', 'purchase_term', 'condition', 'is_save'
+        )
+        read_only_fields = ('id', 'user')
+
+# endregion MyFilters
+
+
 # region Moderation
-class UserListSerializer(serializers.ModelSerializer):
+class ModerationUserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ('first_name', 'last_name', 'telephone', 'email', 'in_blacklist')
+
+
+class ModerationAdSerializer(serializers.ModelSerializer):
+    photos = serializers.PrimaryKeyRelatedField(many=True, queryset=Photo.objects.all())
+
+    class Meta:
+        model = Ad
+        fields = ('price', 'address', 'date_created', 'number_of_rooms', 'total_area', 'photos')
 # endregion Moderation
