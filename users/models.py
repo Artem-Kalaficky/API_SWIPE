@@ -82,10 +82,12 @@ class Filter(models.Model):
                   ('residential', 'Жилое состояние'))
     condition = models.CharField(max_length=32, choices=CONDITIONS, default='rough', null=True, blank=True,
                                  verbose_name='Состояние')
+    is_save = models.BooleanField(default=False, verbose_name='Cохранить фильтр')
 
     class Meta:
         verbose_name = 'Фильтр'
         verbose_name_plural = 'Фильтры'
+        unique_together = ['user', 'type']
 
 
 class Message(models.Model):
