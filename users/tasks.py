@@ -15,11 +15,8 @@ def check_subscription_status():
             if user.subscription_end_date < datetime.datetime.now().date():
                 if user.is_auto_renewal:
                     renew_subscription(user)
-                    print('Подписка автоматически продлена!')
                 else:
                     user.subscription_end_date = None
                     user.is_subscribed = False
                     user.is_auto_renewal = False
                     user.save()
-                    print('Подписка снята!')
-            print('Подписка ещё активна')
