@@ -32,8 +32,6 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     houses = models.ManyToManyField('House', blank=True, verbose_name='Избранное(ЖК)')
     apartments = models.ManyToManyField('Apartment', blank=True, verbose_name='Избранное(Апартаменты)')
     is_developer = models.BooleanField(default=False, verbose_name='Застройщик?')
-    house = models.OneToOneField('House', on_delete=models.CASCADE, null=True, blank=True, related_name='house',
-                                 verbose_name='ЖК')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -117,6 +115,8 @@ class Notary(models.Model):
 
 
 class House(models.Model):
+    user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, verbose_name='Застройщик', null=True,
+                                related_name='house')
     name = models.CharField(max_length=64, verbose_name='Название ЖК')
     address = models.CharField(max_length=64, verbose_name='Адрес ЖК')
     min_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Мин. цена')
@@ -125,52 +125,42 @@ class House(models.Model):
     area_up_to = models.DecimalField(default=100, max_digits=6, decimal_places=2, verbose_name='Площади до')
     description = models.TextField(verbose_name='Описание ЖК')
     STATUSES = (('apartment', 'Квартиры'),)
-    house_status = models.CharField(max_length=32, choices=STATUSES, default='apartment', null=True, blank=True,
-                                    verbose_name='Статус ЖК')
+    house_status = models.CharField(max_length=32, choices=STATUSES, default='apartment', verbose_name='Статус ЖК')
     TYPES = (('multi', 'Многоквартирный'),)
-    house_type = models.CharField(max_length=32, choices=TYPES, default='multi', null=True, blank=True,
-                                  verbose_name='Вид ЖК')
+    house_type = models.CharField(max_length=32, choices=TYPES, default='multi', verbose_name='Вид ЖК')
     CLASSES = (('elite', 'Элитный'),)
-    house_class = models.CharField(max_length=32, choices=CLASSES, default='elite', null=True, blank=True,
-                                   verbose_name='Класс ЖК')
+    house_class = models.CharField(max_length=32, choices=CLASSES, default='elite', verbose_name='Класс ЖК')
     TECHNIQUES = (('monolithic', 'Монолитный каркас с керамзитом'),)
-    building_technique = models.CharField(max_length=32, choices=TECHNIQUES, default='monolithic', null=True,
-                                          blank=True, verbose_name='Технология строительства')
+    building_technique = models.CharField(max_length=32, choices=TECHNIQUES, default='monolithic',
+                                          verbose_name='Технология строительства')
     TERRITORIES = (('closed', 'Закрытая охраняемая'),)
-    territory = models.CharField(max_length=32, choices=TERRITORIES, default='closed', null=True, blank=True,
-                                 verbose_name='Территория')
+    territory = models.CharField(max_length=32, choices=TERRITORIES, default='closed', verbose_name='Территория')
     distance_to_the_sea = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True,
                                               verbose_name='Расстояние до моря')
     PAYMENTS = (('payments', 'Платежи'),)
-    communal_payments = models.CharField(max_length=32, choices=PAYMENTS, default='payments', null=True, blank=True,
+    communal_payments = models.CharField(max_length=32, choices=PAYMENTS, default='payments',
                                          verbose_name='Коммунальные платежи')
     ceiling_height = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True,
                                          verbose_name='Высота потолков')
     CHOICES = (('yes', 'Да'),
                ('no', 'Нет'))
-    gas = models.CharField(max_length=32, choices=CHOICES, default='yes', null=True, blank=True, verbose_name='Газ')
+    gas = models.CharField(max_length=32, choices=CHOICES, default='yes', verbose_name='Газ')
     HEATING = (('central', 'Центральное'),)
-    heating = models.CharField(max_length=32, choices=HEATING, default='central', null=True, blank=True,
-                               verbose_name='Отопление')
+    heating = models.CharField(max_length=32, choices=HEATING, default='central', verbose_name='Отопление')
     SEWERAGE = (('central', 'Центральная'),)
-    sewerage = models.CharField(max_length=32, choices=SEWERAGE, default='central', null=True, blank=True,
-                                verbose_name='Канализация')
-    water_supply = models.CharField(max_length=32, choices=HEATING, default='central', null=True, blank=True,
-                                    verbose_name='Водоснабжение')
+    type_of_sewerage = models.CharField(max_length=32, choices=SEWERAGE, default='central', verbose_name='Канализация')
+    water_supply = models.CharField(max_length=32, choices=HEATING, default='central', verbose_name='Водоснабжение')
     AGREEMENTS = (('justice', 'Юстиция'),)
-    agreements = models.CharField(max_length=32, choices=AGREEMENTS, default='justice', null=True, blank=True,
-                                  verbose_name='Оформление')
+    agreements = models.CharField(max_length=32, choices=AGREEMENTS, default='justice', verbose_name='Оформление')
     OPTIONS = (('mortgage', 'Ипотека'),
                ('whole_amount', 'Оплата целиком'))
-    payment_option = models.CharField(max_length=32, choices=OPTIONS, default='mortgage', null=True, blank=True,
+    payment_option = models.CharField(max_length=32, choices=OPTIONS, default='mortgage',
                                       verbose_name='Варианты расчета')
     PURPOSES = (('new_building', 'Новострой'),)
-    house_purpose = models.CharField(max_length=32, choices=PURPOSES, default='new_building', null=True, blank=True,
-                                     verbose_name='Назначение')
+    house_purpose = models.CharField(max_length=32, choices=PURPOSES, default='new_building', verbose_name='Назначение')
     SUMS = (('full', 'Полная'),
             ('incomplete', 'Неполная'))
-    amount_in_contract = models.CharField(max_length=32, choices=SUMS, default='full', null=True, blank=True,
-                                          verbose_name='Сумма в договоре')
+    amount_in_contract = models.CharField(max_length=32, choices=SUMS, default='full', verbose_name='Сумма в договоре')
     department_first_name = models.CharField(max_length=64, verbose_name='Имя', blank=True)
     department_last_name = models.CharField(max_length=64, verbose_name='Фамилия', blank=True)
     department_telephone = PhoneNumberField(null=True, blank=True, verbose_name='Телефон')

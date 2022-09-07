@@ -115,7 +115,7 @@ class MessageViewSet(mixins.ListModelMixin,
     def get_queryset(self):
         queryset = Message.objects.filter(
             Q(sender=self.request.user) | Q(recipient=self.request.user)
-        )
+        ) if self.request.user.is_authenticated else Message.objects.all()
         recipient = self.request.query_params.get('recipient')
         if recipient:
             queryset = queryset.filter(
@@ -141,9 +141,11 @@ class FilterViewSet(mixins.ListModelMixin,
                     GenericViewSet):
     serializer_class = MyFilterSerializer
     permission_classes = [IsAuthenticated & IsMyFilter]
+    lookup_field = 'id'
 
     def get_queryset(self):
-        queryset = Filter.objects.filter(user=self.request.user)
+        queryset = Filter.objects.filter(user=self.request.user) \
+            if self.request.user.is_authenticated else Filter.objects.all()
         return queryset
 # endregion MyFilters
 
