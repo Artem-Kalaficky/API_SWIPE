@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.core.validators import MaxValueValidator
 from django.db import models
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
@@ -165,6 +166,10 @@ class House(models.Model):
     department_last_name = models.CharField(max_length=64, verbose_name='Фамилия', blank=True)
     department_telephone = PhoneNumberField(null=True, blank=True, verbose_name='Телефон')
     department_email = models.EmailField(verbose_name='E-mail', blank=True)
+    building = models.PositiveIntegerField(verbose_name='Количество корпусов', validators=[MaxValueValidator(4)])
+    section = models.PositiveIntegerField(verbose_name='Количество секций', validators=[MaxValueValidator(4)])
+    floor = models.PositiveIntegerField(verbose_name='Количество этажей', validators=[MaxValueValidator(50)])
+    riser = models.PositiveIntegerField(verbose_name='Количество стояков', validators=[MaxValueValidator(4)])
 
     class Meta:
         verbose_name = 'ЖК'
@@ -257,4 +262,7 @@ class Apartment(models.Model):
     class Meta:
         verbose_name = 'Квартира'
         verbose_name_plural = 'Квартиры'
+
+
+
 

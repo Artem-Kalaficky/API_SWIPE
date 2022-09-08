@@ -15,19 +15,19 @@ class AdvantagesSerializer(serializers.ModelSerializer):
 class NewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
-        fields = ('name', 'description')
+        fields = ('id', 'name', 'description')
 
 
 class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
-        fields = ('document',)
+        fields = ('id', 'document',)
 
 
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ('photo',)
+        fields = ('id', 'photo',)
 
 
 class HouseSerializer(serializers.ModelSerializer):
@@ -95,6 +95,25 @@ class HouseAdvantageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Advantage
         fields = ('advantage1', 'advantage2')
+
+
+class HouseImageSerializers(serializers.ModelSerializer):
+    image = serializers.ListField(required=False, child=serializers.ImageField(allow_null=True))
+    delete_list = serializers.ListField(required=False)
+
+    class Meta:
+        model = House
+        fields = ('image', 'delete_list')
+
+    def update(self, instance, validated_data):
+        delete_list = validated_data.get('delete_list', False)
+        images_data = validated_data.pop('image', False)
+        if delete_list:
+            Image.objects.filter(id__in=delete_list[0].split(',')).delete()
+        if images_data:
+            for image_data in images_data:
+                Image.objects.create(house=instance, photo=image_data)
+        return super().update(instance, validated_data)
 # endregion update House
 
 

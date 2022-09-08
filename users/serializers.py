@@ -3,7 +3,7 @@ from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer
 from rest_framework import serializers
 
-from users.models import Notary, UserProfile, Ad, Photo, Message, Filter
+from users.models import Notary, UserProfile, Message, Filter, Photo, Ad
 
 
 # region User Login and Registration
