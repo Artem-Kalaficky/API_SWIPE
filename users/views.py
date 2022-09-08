@@ -1,17 +1,15 @@
-from allauth.account.models import EmailAddress
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
-from django_filters import rest_framework as filters
 from drf_psq import Rule, PsqMixin
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
-from rest_framework import viewsets, permissions, mixins, status
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework import permissions, mixins, status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import RetrieveUpdateAPIView, ListAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import GenericViewSet
 
 from users.models import Notary, UserProfile, Ad, Message, Filter
 from users.serializers import (
@@ -117,7 +115,7 @@ class MessageViewSet(mixins.ListModelMixin,
     def get_queryset(self):
         queryset = Message.objects.filter(
             Q(sender=self.request.user) | Q(recipient=self.request.user)
-        )
+        ) if self.request.user.is_authenticated else Message.objects.all()
         recipient = self.request.query_params.get('recipient')
         if recipient:
             queryset = queryset.filter(
@@ -143,9 +141,11 @@ class FilterViewSet(mixins.ListModelMixin,
                     GenericViewSet):
     serializer_class = MyFilterSerializer
     permission_classes = [IsAuthenticated & IsMyFilter]
+    lookup_field = 'id'
 
     def get_queryset(self):
-        queryset = Filter.objects.filter(user=self.request.user)
+        queryset = Filter.objects.filter(user=self.request.user) \
+            if self.request.user.is_authenticated else Filter.objects.all()
         return queryset
 # endregion MyFilters
 

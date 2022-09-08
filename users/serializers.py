@@ -1,74 +1,33 @@
 from allauth.account.models import EmailAddress
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer
-from django.core.exceptions import ValidationError
 from rest_framework import serializers
-
-from allauth.account import app_settings as allauth_settings
-from allauth.utils import email_address_exists
-from allauth.account.adapter import get_adapter
-from allauth.account.utils import setup_user_email
 
 from users.models import Notary, UserProfile, Ad, Photo, Message, Filter
 
 
+# region User Login and Registration
 class MyLoginSerializer(LoginSerializer):
     username = None
     email = serializers.EmailField(required=True, allow_blank=True)
 
 
-class MyRegisterSerializer(serializers.Serializer):
+class MyRegisterSerializer(RegisterSerializer):
+    username = None
     first_name = serializers.CharField(required=True, write_only=True)
     last_name = serializers.CharField(required=True, write_only=True)
-    email = serializers.EmailField(required=allauth_settings.EMAIL_REQUIRED)
+    email = serializers.EmailField(required=True)
     password1 = serializers.CharField(write_only=True)
     password2 = serializers.CharField(write_only=True)
-
-    def validate_email(self, email):
-        email = get_adapter().clean_email(email)
-        if allauth_settings.UNIQUE_EMAIL:
-            if email and email_address_exists(email):
-                raise serializers.ValidationError(
-                    'Пользователь с таким email уже существует.',
-                )
-        return email
-
-    def validate_password1(self, password):
-        return get_adapter().clean_password(password)
-
-    def validate(self, data):
-        if data['password1'] != data['password2']:
-            raise serializers.ValidationError("Пароли не совпадают.")
-        return data
-
-    def custom_signup(self, request, user):
-        pass
 
     def get_cleaned_data(self):
         return {
             'first_name': self.validated_data.get('first_name', ''),
             'last_name': self.validated_data.get('last_name', ''),
-            'username': self.validated_data.get('username', ''),
             'password1': self.validated_data.get('password1', ''),
-            'email': self.validated_data.get('email', ''),
+            'email': self.validated_data.get('email', '')
         }
-
-    def save(self, request):
-        adapter = get_adapter()
-        user = adapter.new_user(request)
-        self.cleaned_data = self.get_cleaned_data()
-        user = adapter.save_user(request, user, self, commit=False)
-        if "password1" in self.cleaned_data:
-            try:
-                adapter.clean_password(self.cleaned_data['password1'], user=user)
-            except ValidationError as exc:
-                raise serializers.ValidationError(
-                    detail=serializers.as_serializer_error(exc)
-                )
-        user.save()
-        self.custom_signup(request, user)
-        setup_user_email(request, user, [])
-        return user
+# endregion User Login and Registration
 
 
 # region Notary
@@ -155,11 +114,22 @@ class MessageSerializer(serializers.ModelSerializer):
 
 # region Filters
 class MyFilterSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        if len(Filter.objects.filter(user=self.context.get('request').user)) >= 4:
+            raise serializers.ValidationError(
+                'У пользователя не может быть более 4-х сохранённых фильтров.'
+            )
+        else:
+            instance = Filter.objects.create(
+                **validated_data, user=self.context.get('request').user
+            )
+        return instance
+
     class Meta:
         model = Filter
         fields = (
-            'id', 'user', 'type', 'status_of_house', 'district', 'microdistrict', 'number_of_rooms', 'price_from',
-            'price_up_to', 'area_from', 'area_up_to', 'purpose', 'purchase_term', 'condition', 'is_save'
+            'id', 'user', 'type', 'status_of_house', 'number_of_rooms', 'price_from', 'price_up_to', 'area_from',
+            'area_up_to', 'purpose', 'purchase_term', 'condition', 'is_save'
         )
         read_only_fields = ('id', 'user')
 
