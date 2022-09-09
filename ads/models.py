@@ -3,8 +3,11 @@ from datetime import timedelta
 from django.db import models
 from django.utils import timezone
 
+from users.models import Ad
+
 
 class Promotion(models.Model):
+    ad = models.OneToOneField(Ad, on_delete=models.CASCADE, verbose_name='Объявление')
     is_gift = models.BooleanField(default=False, verbose_name='Подарок при покупке')
     is_bargaining = models.BooleanField(default=False, verbose_name='Возможен торг')
     is_by_the_sea = models.BooleanField(default=False, verbose_name='Квартира у моря')
@@ -24,7 +27,7 @@ class Promotion(models.Model):
              ('turbo', 'Турбо'))
     type_of_promotion = models.CharField(max_length=32, choices=TYPES, default='None', null=True, blank=True,
                                          verbose_name='Тип объявления')
-    end_date = models.DateField(default=(timezone.now() + timedelta(days=30)),
+    end_date = models.DateField(default=(timezone.now().date() + timedelta(days=30)),
                                 verbose_name='Дата завершения продвижения')
 
     class Meta:

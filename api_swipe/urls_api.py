@@ -7,4 +7,5 @@ urlpatterns = [
     # my api
     path('', include('users.urls')),
     path('', include('houses.urls')),
+    path('', include('ads.urls'))
 ]

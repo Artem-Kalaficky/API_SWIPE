@@ -1,10 +1,9 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 
-from ads.models import Promotion
 from .managers import CustomUserManager
 
 
@@ -180,9 +179,9 @@ class House(models.Model):
 
 
 class Ad(models.Model):
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, verbose_name='Пользователь')
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='ad')
     address = models.CharField(max_length=64, verbose_name='Адрес')
-    house = models.OneToOneField('House', on_delete=models.CASCADE, null=True, blank=True, verbose_name='ЖК')
+    house = models.ForeignKey('House', on_delete=models.CASCADE, null=True, blank=True, verbose_name='ЖК')
     DOCUMENTS = (('None', ''),
                  ('property', 'Собственность'))
     foundation_document = models.CharField(max_length=32, choices=DOCUMENTS, default='property', null=True, blank=True,
@@ -190,8 +189,7 @@ class Ad(models.Model):
     PURPOSES = (('apartment', 'Квартира'),
                 ('cottage', 'Коттедж'),
                 ('new_building', 'Новострой'))
-    purpose = models.CharField(max_length=32, choices=PURPOSES, default='apartment', null=True, blank=True,
-                               verbose_name='Назначение')
+    purpose = models.CharField(max_length=32, choices=PURPOSES, default='apartment', verbose_name='Назначение')
     ROOMS = (('one-room', 'Однокомнатная'),
              ('two-room', 'Двухкомнатная'),
              ('three-room', 'Трехкомнатная'))
@@ -206,9 +204,9 @@ class Ad(models.Model):
     condition = models.CharField(max_length=32, choices=CONDITIONS, default='rough', null=True, blank=True,
                                  verbose_name='Жилое состояние')
     total_area = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True,
-                                     verbose_name='Общая площадь')
+                                     verbose_name='Общая площадь', validators=[MinValueValidator(1)])
     kitchen_area = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True,
-                                       verbose_name='Площадь кухни')
+                                       verbose_name='Площадь кухни', validators=[MinValueValidator(1)])
     CHOICES = (('yes', 'Да'),
                ('no', 'Нет'))
     balcony = models.CharField(max_length=32, choices=CHOICES, default='yes', null=True, blank=True,
@@ -228,13 +226,11 @@ class Ad(models.Model):
     communication_method = models.CharField(max_length=32, choices=METHODS, default='email', null=True, blank=True,
                                             verbose_name='Способ связи')
     description = models.TextField(verbose_name='Описание')
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена')
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена', validators=[MinValueValidator(1)])
     is_incorrect_price = models.BooleanField(default=False, verbose_name='Некорректная цена')
     is_incorrect_photo = models.BooleanField(default=False, verbose_name='Некорректное фото')
     is_incorrect_description = models.BooleanField(default=False, verbose_name='Некорректное описание')
     date_created = models.DateField(auto_now_add=True)
-    promotion = models.ForeignKey(Promotion, on_delete=models.PROTECT, null=True, blank=True,
-                                  verbose_name='Продвижение')
 
     class Meta:
         verbose_name = 'Объявление'
