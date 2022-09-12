@@ -24,8 +24,11 @@ celery_beat:
 dumpdata:
 	$(MANAGE) dumpdata --natural-foreign --natural-primary -e contenttypes -e auth.Permission --indent 4 > db.json
 
+init_script:
+	$(MANAGE) create_users
+	$(MANAGE) create_developers
+
 startapp:
 	$(MANAGE) migrate --no-input
-	$(MANAGE) init_script
 	$(MANAGE) collectstatic --no-input
 	gunicorn my_house24.wsgi:application --bind 0.0.0.0:8000

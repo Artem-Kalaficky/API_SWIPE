@@ -2,6 +2,7 @@ from drf_psq import Rule, PsqMixin
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, permissions, status
 from rest_framework.decorators import action
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -10,8 +11,8 @@ from rest_framework.viewsets import GenericViewSet
 from houses.models import Document, News
 from houses.serializers import DeveloperProfileSerializer, HouseInformationSerializer, HouseInfrastructureSerializer, \
     HouseAgreementSerializer, HouseSalesDepartmentSerializer, HouseDocumentSerializer, HouseNewsSerializer, \
-    HouseAdvantageSerializer
-from users.models import Notary, UserProfile
+    HouseAdvantageSerializer, HouseImageSerializers, HouseSerializer
+from users.models import Notary, UserProfile, House
 
 
 # region my Permissions
@@ -27,7 +28,7 @@ class IsMyContent(permissions.BasePermission):
 
 
 # region Developer Profile
-class DeveloperProfileViewSet(GenericViewSet):
+class DeveloperProfileViewSet(PsqMixin, GenericViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = DeveloperProfileSerializer
     parser_classes = (MultiPartParser,)
@@ -79,6 +80,14 @@ class DeveloperProfileViewSet(GenericViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(description='Update images for house. Add Image id in "delete_list" for deleting', methods=['put'])
+    @action(detail=False, methods=['put'], serializer_class=HouseImageSerializers)
+    def update_house_images(self, request):
+        serializer = self.serializer_class(request.user.house, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'status': 'Картинки дома успешно обновлены.'})
+
 
 class HouseDocumentViewSet(mixins.CreateModelMixin,
                            mixins.UpdateModelMixin,
@@ -99,3 +108,10 @@ class HouseNewsViewSet(mixins.CreateModelMixin,
     parser_classes = (MultiPartParser,)
     permission_classes = [IsDeveloperUser & IsMyContent]
 # endregion Developer Profile
+
+
+# region House card
+class HouseCardApiView(RetrieveAPIView):
+    queryset = House.objects.all()
+    serializer_class = HouseSerializer
+# endregion House card

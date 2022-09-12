@@ -11,7 +11,8 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from users.models import Notary, UserProfile, Ad, Message, Filter
+from users.models import Notary, UserProfile, Message, Filter, Ad
+
 from users.serializers import (
     NotarySerializer, UserProfileSerializer, UserSwitchNoticesSerializer, UserAgentContactsSerializer,
     UserManageNoticeSerializer, UserSubscriptionSerializer, UserSubscriptionRenewalSerializer,

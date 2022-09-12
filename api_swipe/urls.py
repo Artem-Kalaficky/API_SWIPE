@@ -3,12 +3,15 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 
 urlpatterns = [
-    path('', include('users.urls')),
-    path('', include('houses.urls')),
-    path('api/', include('api_swipe.urls_api')),
+    path('', include('api_swipe.urls_api')),
+
+    # JWT
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 
     # drf spectacular
     path('docs/schema/', SpectacularAPIView.as_view(), name='schema'),
