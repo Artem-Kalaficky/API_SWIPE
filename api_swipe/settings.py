@@ -17,6 +17,7 @@ import environ
 from celery.schedules import crontab
 
 import users.tasks
+import ads.tasks
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -121,6 +122,9 @@ DATABASES = {
         'PORT': '',
     }
 }
+
+ATOMIC_REQUESTS = True
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -249,6 +253,10 @@ CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 CELERY_BEAT_SCHEDULE = {
     "check_subscription_status": {
         "task": "users.tasks.check_subscription_status",
+        "schedule": crontab(minute=0, hour=0),
+    },
+    "check_promotion_status": {
+        "task": "ads.tasks.check_promotion_status",
         "schedule": crontab(minute=0, hour=0),
     },
 }

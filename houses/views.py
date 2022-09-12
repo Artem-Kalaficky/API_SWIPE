@@ -1,30 +1,22 @@
-from drf_psq import Rule, PsqMixin
+from drf_psq import PsqMixin
 from drf_spectacular.utils import extend_schema
-from rest_framework import mixins, permissions, status
+from rest_framework import mixins, status
 from rest_framework.decorators import action
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from django_filters import rest_framework as filters
 
+from houses.filters import ApartmentFilter
 from houses.models import Document, News
-from houses.serializers import DeveloperProfileSerializer, HouseInformationSerializer, HouseInfrastructureSerializer, \
-    HouseAgreementSerializer, HouseSalesDepartmentSerializer, HouseDocumentSerializer, HouseNewsSerializer, \
-    HouseAdvantageSerializer, HouseImageSerializers, HouseSerializer
-from users.models import Notary, UserProfile, House
-
-
-# region my Permissions
-class IsDeveloperUser(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.is_developer
-
-
-class IsMyContent(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return request.user.house == obj.house
-# endregion my Permissions
+from houses.permissions import IsDeveloperUser, IsMyContent, IsMyRequest
+from houses.serializers import (
+    DeveloperProfileSerializer, HouseInformationSerializer, HouseInfrastructureSerializer, HouseAgreementSerializer,
+    HouseSalesDepartmentSerializer, HouseDocumentSerializer, HouseNewsSerializer, HouseAdvantageSerializer,
+    HouseImageSerializers, HouseSerializer, ApartmentSerializer
+)
+from users.models import UserProfile, House, Apartment
 
 
 # region Developer Profile
@@ -89,25 +81,55 @@ class DeveloperProfileViewSet(PsqMixin, GenericViewSet):
         return Response({'status': 'Картинки дома успешно обновлены.'})
 
 
+@extend_schema(tags=['house-documents'])
 class HouseDocumentViewSet(mixins.CreateModelMixin,
                            mixins.UpdateModelMixin,
                            mixins.DestroyModelMixin,
                            GenericViewSet):
     queryset = Document.objects.all()
+    http_method_names = ["put", "post", "delete"]
     serializer_class = HouseDocumentSerializer
     parser_classes = (MultiPartParser,)
     permission_classes = [IsDeveloperUser & IsMyContent]
 
 
+@extend_schema(tags=['house-news'])
 class HouseNewsViewSet(mixins.CreateModelMixin,
                        mixins.UpdateModelMixin,
                        mixins.DestroyModelMixin,
                        GenericViewSet):
     queryset = News.objects.all()
+    http_method_names = ["put", "post", "delete"]
     serializer_class = HouseNewsSerializer
     parser_classes = (MultiPartParser,)
     permission_classes = [IsDeveloperUser & IsMyContent]
+
+
+@extend_schema(tags=['house-add-requests'])
+class HouseAddRequestsViewSet(mixins.ListModelMixin,
+                              mixins.UpdateModelMixin,
+                              GenericViewSet):
+    http_method_names = ["put", "get"]
+    serializer_class = ApartmentSerializer
+    parser_classes = (MultiPartParser,)
+    permission_classes = [IsDeveloperUser & IsMyRequest]
+
+    def get_queryset(self):
+        queryset = Apartment.objects.filter(ad__house=self.request.user.house, is_reserved=False)
+        return queryset
 # endregion Developer Profile
+
+
+# region House Checkerboard
+@extend_schema(tags=['checkerboard'])
+class HouseCheckerboardViewSet(mixins.ListModelMixin,
+                               mixins.RetrieveModelMixin,
+                               GenericViewSet):
+    queryset = Apartment.objects.filter(is_reserved=True)
+    serializer_class = ApartmentSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = ApartmentFilter
+# endregion House Checkerboard
 
 
 # region House card

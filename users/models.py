@@ -201,10 +201,9 @@ class Ad(models.Model):
                                         verbose_name='Планировка')
     CONDITIONS = (('rough', 'Черновое'),
                   ('residential', 'Жилое состояние'))
-    condition = models.CharField(max_length=32, choices=CONDITIONS, default='rough', null=True, blank=True,
-                                 verbose_name='Жилое состояние')
-    total_area = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True,
-                                     verbose_name='Общая площадь', validators=[MinValueValidator(1)])
+    condition = models.CharField(max_length=32, choices=CONDITIONS, default='rough', verbose_name='Жилое состояние')
+    total_area = models.DecimalField(max_digits=6, decimal_places=2, verbose_name='Общая площадь',
+                                     validators=[MinValueValidator(1)])
     kitchen_area = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True,
                                        verbose_name='Площадь кухни', validators=[MinValueValidator(1)])
     CHOICES = (('yes', 'Да'),
@@ -227,6 +226,7 @@ class Ad(models.Model):
                                             verbose_name='Способ связи')
     description = models.TextField(verbose_name='Описание')
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена', validators=[MinValueValidator(1)])
+    price_for_m2 = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена за m2')
     is_incorrect_price = models.BooleanField(default=False, verbose_name='Некорректная цена')
     is_incorrect_photo = models.BooleanField(default=False, verbose_name='Некорректное фото')
     is_incorrect_description = models.BooleanField(default=False, verbose_name='Некорректное описание')
@@ -248,16 +248,18 @@ class Photo(models.Model):
 
 class Apartment(models.Model):
     ad = models.OneToOneField(Ad, on_delete=models.PROTECT, verbose_name='Объявление')
-    building = models.IntegerField(verbose_name='Корпус')
-    section = models.IntegerField(verbose_name='Секция')
-    floor = models.IntegerField(verbose_name='Этаж')
-    riser = models.IntegerField(verbose_name='Стояк')
-    number = models.IntegerField(verbose_name='Номер')
+    building = models.PositiveIntegerField(verbose_name='Корпус', blank=True, null=True)
+    section = models.PositiveIntegerField(verbose_name='Секция', blank=True, null=True)
+    floor = models.PositiveIntegerField(verbose_name='Этаж', blank=True, null=True)
+    riser = models.PositiveIntegerField(verbose_name='Стояк', blank=True, null=True)
+    number = models.PositiveIntegerField(verbose_name='Номер', blank=True, null=True)
+    schema = models.ImageField(upload_to='gallery/', null=True, blank=True, verbose_name='Планировка')
     is_reserved = models.BooleanField(default=False, verbose_name='Забронирована')
 
     class Meta:
         verbose_name = 'Квартира'
         verbose_name_plural = 'Квартиры'
+        unique_together = ['building', 'section', 'floor', 'riser', 'number', 'ad']
 
 
 
