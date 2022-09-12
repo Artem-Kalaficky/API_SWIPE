@@ -2,7 +2,8 @@ from allauth.account.models import EmailAddress
 from rest_framework import serializers
 
 from houses.models import Advantage, News, Document, Image
-from users.models import UserProfile, House
+from houses.validators import validate_apartment
+from users.models import UserProfile, House, Apartment, Ad
 
 
 # region Developer Profile
@@ -141,3 +142,37 @@ class HouseNewsSerializer(serializers.ModelSerializer):
         model = News
         fields = ('id', 'name', 'description')
 # endregion Documents and News
+
+
+# region Requests to add in house
+class DataForApartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ad
+        fields = ('price', 'total_area', 'condition', 'price_for_m2')
+
+
+class ApartmentSerializer(serializers.ModelSerializer):
+    ad = DataForApartmentSerializer(read_only=True)
+
+    class Meta:
+        model = Apartment
+        fields = ('id', 'ad', 'building', 'section', 'floor', 'riser', 'number', 'schema', 'is_reserved', 'ad')
+        read_only_fields = ('ad',)
+        extra_kwargs = {
+            'building': {'required': True},
+            'section': {'required': True},
+            'floor': {'required': True},
+            'riser': {'required': True},
+            'number': {'required': True}
+        }
+
+    def validate(self, attrs):
+        house = self.context.get('request').user.house
+        validate_apartment(house, attrs)
+        return attrs
+# endregion Requests to add in house
+
+
+# region Chessboard
+
+# endregion Chessboard

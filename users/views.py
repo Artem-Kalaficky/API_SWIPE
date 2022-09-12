@@ -9,7 +9,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from users.models import Notary, UserProfile, Message, Filter, Ad
 
@@ -29,13 +29,9 @@ class IsMyFilter(permissions.BasePermission):
 
 
 # region Notaries
-class NotaryViewSet(PsqMixin,
-                    mixins.CreateModelMixin,
-                    mixins.UpdateModelMixin,
-                    mixins.DestroyModelMixin,
-                    mixins.ListModelMixin,
-                    GenericViewSet):
+class NotaryViewSet(PsqMixin, ModelViewSet):
     queryset = Notary.objects.all()
+    http_method_names = ["put", "post", "get", "delete"]
     serializer_class = NotarySerializer
     parser_classes = (MultiPartParser,)
 
@@ -140,6 +136,7 @@ class FilterViewSet(mixins.ListModelMixin,
                     mixins.CreateModelMixin,
                     mixins.UpdateModelMixin,
                     GenericViewSet):
+    http_method_names = ["put", "post", "get"]
     serializer_class = MyFilterSerializer
     permission_classes = [IsAuthenticated & IsMyFilter]
     lookup_field = 'id'

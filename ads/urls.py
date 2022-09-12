@@ -4,10 +4,11 @@ from rest_framework.routers import DefaultRouter
 from .views import AdViewSet, PromotionViewSet
 
 router = DefaultRouter()
-router.register(r'my-ads', AdViewSet, basename="my-ad")
-router.register(r'promotions', PromotionViewSet, basename="promotion")
+router.register(r'my-ads', AdViewSet, basename='my-ad')
+router.register(r'promotions', PromotionViewSet)
 
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('ads/', include(router.urls)),
 ]
+
