@@ -131,9 +131,3 @@ class HouseCheckerboardViewSet(mixins.ListModelMixin,
     filterset_class = ApartmentFilter
 # endregion House Checkerboard
 
-
-# region House card
-class HouseCardApiView(RetrieveAPIView):
-    queryset = House.objects.all()
-    serializer_class = HouseSerializer
-# endregion House card

@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    DeveloperProfileViewSet, HouseDocumentViewSet, HouseNewsViewSet, HouseCardApiView, HouseAddRequestsViewSet,
+    DeveloperProfileViewSet, HouseDocumentViewSet, HouseNewsViewSet, HouseAddRequestsViewSet,
     HouseCheckerboardViewSet
 )
 
@@ -15,6 +15,4 @@ router.register(r'house/checkerboard', HouseCheckerboardViewSet, basename="check
 
 urlpatterns = [
     path('', include(router.urls)),
-
-    path('house-card/<int:pk>', HouseCardApiView.as_view())
 ]

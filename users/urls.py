@@ -4,13 +4,16 @@ from dj_rest_auth.views import LoginView
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import NotaryViewSet, UserViewSet, ModerationUserListApiView, MessageViewSet, FilterViewSet
+from .views import (
+    NotaryViewSet, UserViewSet, ModerationUserListApiView, MessageViewSet, FilterViewSet, ModerationAdViewSet
+)
 
 router = DefaultRouter()
 router.register(r'notaries', NotaryViewSet, basename="notary")
 router.register(r'profile', UserViewSet, basename="profile")
 router.register(r'messages', MessageViewSet, basename="message")
 router.register(r'my-filters', FilterViewSet, basename="my-filter")
+router.register(r'moderation/ads', ModerationAdViewSet, basename="ad")
 
 
 urlpatterns = [

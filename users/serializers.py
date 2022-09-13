@@ -1,6 +1,7 @@
 from allauth.account.models import EmailAddress
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer
+from django.db import IntegrityError
 from rest_framework import serializers
 
 from users.models import Notary, UserProfile, Message, Filter, Photo, Ad
@@ -114,25 +115,28 @@ class MessageSerializer(serializers.ModelSerializer):
 
 # region Filters
 class MyFilterSerializer(serializers.ModelSerializer):
-    def create(self, validated_data):
-        if len(Filter.objects.filter(user=self.context.get('request').user)) >= 4:
-            raise serializers.ValidationError(
-                'У пользователя не может быть более 4-х сохранённых фильтров.'
-            )
-        else:
-            instance = Filter.objects.create(
-                **validated_data, user=self.context.get('request').user
-            )
-        return instance
-
     class Meta:
         model = Filter
         fields = (
-            'id', 'user', 'type', 'status_of_house', 'number_of_rooms', 'price_from', 'price_up_to', 'area_from',
-            'area_up_to', 'purpose', 'purchase_term', 'condition', 'is_save'
+            'id', 'user', 'type', 'number_of_rooms', 'price_from', 'price_up_to', 'area_from', 'area_up_to', 'purpose',
+            'purchase_term', 'condition', 'is_save'
         )
         read_only_fields = ('id', 'user')
 
+    def create(self, validated_data):
+        try:
+            instance = Filter.objects.create(
+                **validated_data, user=self.context.get('request').user
+            )
+        except IntegrityError:
+            raise serializers.ValidationError({'type_filter_error': 'Такой тип фильтр уже сохранён у пользователя.'})
+        return instance
+
+    def update(self, instance, validated_data):
+        try:
+            return super().update(instance, validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError({'type_filter_error': 'Такой тип фильтр уже сохранён у пользователя.'})
 # endregion MyFilters
 
 
@@ -144,9 +148,29 @@ class ModerationUserListSerializer(serializers.ModelSerializer):
 
 
 class ModerationAdSerializer(serializers.ModelSerializer):
-    photos = serializers.PrimaryKeyRelatedField(many=True, queryset=Photo.objects.all())
-
     class Meta:
         model = Ad
-        fields = ('price', 'address', 'date_created', 'number_of_rooms', 'total_area', 'photos')
+        fields = (
+            'id', 'address', 'house', 'foundation_document', 'purpose', 'number_of_rooms', 'apartment_layout',
+            'condition', 'total_area', 'kitchen_area', 'balcony', 'heating_type', 'payment_option', 'agent_commission',
+            'communication_method', 'description', 'price', 'is_incorrect_price', 'is_incorrect_photo',
+            'is_incorrect_description', 'date_created'
+        )
+        read_only_fields = (
+            'address', 'house', 'foundation_document', 'purpose', 'number_of_rooms', 'apartment_layout',
+            'condition', 'total_area', 'kitchen_area', 'balcony', 'heating_type', 'payment_option', 'agent_commission',
+            'communication_method', 'description', 'price'
+        )
+        extra_kwargs = {
+            'is_incorrect_price': {'write_only': True},
+            'is_incorrect_photo': {'write_only': True},
+            'is_incorrect_description': {'write_only': True}
+        }
+
+    def update(self, instance, validated_data):
+        if validated_data.get('is_incorrect_price', False) or validated_data.get('is_incorrect_photo', False) or \
+                validated_data.get('is_incorrect_description', False):
+            instance.is_disabled = True
+            instance.save()
+        return super().update(instance, validated_data)
 # endregion Moderation

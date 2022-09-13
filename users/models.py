@@ -30,7 +30,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     is_switch_to_agent = models.BooleanField(default=False, verbose_name='Переключить звонки и сообщения на агента')
     in_blacklist = models.BooleanField(default=False, verbose_name='В черном списке')
     houses = models.ManyToManyField('House', blank=True, verbose_name='Избранное(ЖК)')
-    apartments = models.ManyToManyField('Apartment', blank=True, verbose_name='Избранное(Апартаменты)')
+    ads = models.ManyToManyField('Ad', blank=True, verbose_name='Избранное(Объявления)')
     is_developer = models.BooleanField(default=False, verbose_name='Застройщик?')
 
     USERNAME_FIELD = 'email'
@@ -55,8 +55,6 @@ class Filter(models.Model):
     type = models.CharField(max_length=32, choices=TYPES, default='all', verbose_name='Тип фильтра')
     STATUSES = (('rented', 'Сдан'),
                 ('free', 'Не сдан'))
-    status_of_house = models.CharField(max_length=32, choices=STATUSES, default='rented', null=True, blank=True,
-                                       verbose_name='Статус дома')
     ROOMS = (('one-room', 'Однокомнатная'),
              ('two-room', 'Двухкомнатная'),
              ('three-room', 'Трехкомнатная'))
@@ -83,6 +81,7 @@ class Filter(models.Model):
     class Meta:
         verbose_name = 'Фильтр'
         verbose_name_plural = 'Фильтры'
+        unique_together = ['user', 'type']
 
 
 class Message(models.Model):
@@ -182,8 +181,7 @@ class Ad(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='ad')
     address = models.CharField(max_length=64, verbose_name='Адрес')
     house = models.ForeignKey('House', on_delete=models.CASCADE, null=True, blank=True, verbose_name='ЖК')
-    DOCUMENTS = (('None', ''),
-                 ('property', 'Собственность'))
+    DOCUMENTS = (('property', 'Собственность'),)
     foundation_document = models.CharField(max_length=32, choices=DOCUMENTS, default='property', null=True, blank=True,
                                            verbose_name='Документ основания')
     PURPOSES = (('apartment', 'Квартира'),
@@ -193,10 +191,9 @@ class Ad(models.Model):
     ROOMS = (('one-room', 'Однокомнатная'),
              ('two-room', 'Двухкомнатная'),
              ('three-room', 'Трехкомнатная'))
-    number_of_rooms = models.CharField(max_length=32, choices=ROOMS, default='one-room', null=True, blank=True,
+    number_of_rooms = models.CharField(max_length=32, choices=ROOMS, default='one-room',
                                        verbose_name='Количество комнат')
-    LAYOUTS = (('None', ''),
-               ('studio', 'Студия'))
+    LAYOUTS = (('studio', 'Студия'),)
     apartment_layout = models.CharField(max_length=32, choices=LAYOUTS, default='studio', null=True, blank=True,
                                         verbose_name='Планировка')
     CONDITIONS = (('rough', 'Черновое'),
@@ -216,7 +213,7 @@ class Ad(models.Model):
                                     verbose_name='Тип отопления')
     OPTIONS = (('mortgage', 'Ипотека'),
                ('whole_amount', 'Оплата целиком'))
-    payment_option = models.CharField(max_length=32, choices=OPTIONS, default='mortgage', null=True, blank=True,
+    payment_option = models.CharField(max_length=32, choices=OPTIONS, default='mortgage',
                                       verbose_name='Варианты расчета')
     agent_commission = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
                                            verbose_name='Коммисия агенту')
@@ -231,6 +228,7 @@ class Ad(models.Model):
     is_incorrect_photo = models.BooleanField(default=False, verbose_name='Некорректное фото')
     is_incorrect_description = models.BooleanField(default=False, verbose_name='Некорректное описание')
     date_created = models.DateField(auto_now_add=True)
+    is_disabled = models.BooleanField(default=False, verbose_name='Отклонено')
 
     class Meta:
         verbose_name = 'Объявление'
@@ -238,12 +236,24 @@ class Ad(models.Model):
 
 
 class Photo(models.Model):
-    ad = models.ForeignKey(Ad, on_delete=models.CASCADE, verbose_name='Объявление')
+    ad = models.ForeignKey(Ad, on_delete=models.CASCADE, verbose_name='Объявление', related_name='photos')
     photo = models.ImageField(upload_to='gallery/', verbose_name='Фото')
+    order = models.IntegerField(verbose_name='Очередь')
 
     class Meta:
         verbose_name = 'Фото'
         verbose_name_plural = 'Фото'
+        ordering = ['order']
+
+
+class Complaint(models.Model):
+    ad = models.ForeignKey(Ad, on_delete=models.CASCADE, related_name='complaint', verbose_name='Объявление')
+    text = models.TextField(verbose_name='Текст жалобы')
+    user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, verbose_name='Пользователь')
+
+    class Meta:
+        verbose_name = 'Жалоба'
+        verbose_name_plural = 'Жалобы'
 
 
 class Apartment(models.Model):
