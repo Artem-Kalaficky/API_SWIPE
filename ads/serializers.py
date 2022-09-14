@@ -85,7 +85,7 @@ class AdSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        photos_data = validated_data.pop('photos')
+        photos_data = validated_data.pop('photos', False)
         price_for_m2 = validated_data.get('price') / validated_data.get('total_area')
         instance = Ad.objects.create(
             **validated_data, user=self.context.get('request').user, price_for_m2=price_for_m2
@@ -122,18 +122,18 @@ class AdSerializer(serializers.ModelSerializer):
                     }
                 ],
                 "photos": [
-                    # {
-                    #   "order": 1,
-                    #   "photo": generate_base64()
-                    # },
-                    # {
-                    #   "order": 2,
-                    #   "photo": generate_base64()
-                    # },
-                    # {
-                    #   "order": 3,
-                    #   "photo": generate_base64()
-                    # },
+                    {
+                      "order": 1,
+                      "photo": generate_base64()
+                    },
+                    {
+                      "order": 2,
+                      "photo": generate_base64()
+                    },
+                    {
+                      "order": 3,
+                      "photo": generate_base64()
+                    },
                 ],
             },
             request_only=True,
@@ -143,18 +143,15 @@ class AdSerializer(serializers.ModelSerializer):
 )
 class AdUpdateSerializers(serializers.ModelSerializer):
     photos = PhotoSerializer(many=True)
-    order_photos = OrderPhotoSerializer(many=True)
+    photos_order = OrderPhotoSerializer(write_only=True, many=True)
 
     class Meta:
         model = Ad
         fields = (
             'id', 'address', 'foundation_document', 'number_of_rooms', 'apartment_layout', 'condition', 'total_area',
             'kitchen_area', 'balcony', 'heating_type', 'payment_option', 'agent_commission', 'communication_method',
-            'description', 'price', 'order_photos', 'photos'
+            'description', 'price', 'photos_order', 'photos'
         )
-        extra_kwargs = {
-            'order_photos': {'write_only': True},
-        }
 
     def validate(self, attrs):
         if attrs.get('total_area', False) and attrs.get('kitchen_area', False) \
@@ -165,10 +162,20 @@ class AdUpdateSerializers(serializers.ModelSerializer):
         return attrs
 
     def update(self, instance, validated_data):
-        print(validated_data)
+        photos_data = validated_data.pop('photos', False)
+        photos_order_data = validated_data.pop('photos_order', False)
+        if photos_order_data:
+            idx = [photo_order_data.get('id') for photo_order_data in photos_order_data]
+            instance.photos.exclude(id__in=idx).delete()
+            for photo_order_data in photos_order_data:
+                Photo.objects.filter(pk=photo_order_data.get('id')).update(
+                    order=photo_order_data.get('order')
+                )
+        if photos_data:
+            for photo_data in photos_data:
+                Photo.objects.create(ad=instance, photo=photo_data.get('photo'), order=photo_data.get('order'))
         instance.price_for_m2 = validated_data.get('price') / validated_data.get('total_area')
-        instance.save()
-        return instance
+        return super().update(instance, validated_data)
 # endregion Ad
 
 

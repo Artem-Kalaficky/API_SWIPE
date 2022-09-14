@@ -2,16 +2,14 @@ import base64
 
 from django.core.files.base import ContentFile
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema, extend_schema_serializer, OpenApiExample, OpenApiParameter
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status
 from rest_framework.decorators import action
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView, \
-    get_object_or_404
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-from rest_framework import serializers
 
 from ads.filters import FeedFilter
 from ads.models import Promotion
@@ -45,6 +43,8 @@ class AdViewSet(mixins.ListModelMixin,
     @extend_schema(description='Update Ad', methods=['put'])
     @action(detail=True, methods=['put'], serializer_class=AdUpdateSerializers)
     def update_ad(self, request, pk=None):
+        for p_dict in request.data.get('photos'):
+            p_dict['photo'] = ContentFile(base64.b64decode(p_dict['photo']), name='house.jpg')
         serializer = self.serializer_class(self.get_object(), data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
