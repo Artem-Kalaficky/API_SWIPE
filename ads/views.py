@@ -40,11 +40,7 @@ class AdViewSet(mixins.ListModelMixin,
     def create(self, request, *args, **kwargs):
         for p_dict in request.data.get('photos'):
             p_dict['photo'] = ContentFile(base64.b64decode(p_dict['photo']), name='house.jpg')
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return super().create(request, *args, **kwargs)
 
     @extend_schema(description='Update Ad', methods=['put'])
     @action(detail=True, methods=['put'], serializer_class=AdUpdateSerializers)

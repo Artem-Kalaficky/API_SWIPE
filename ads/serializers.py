@@ -15,6 +15,11 @@ class PhotoSerializer(serializers.ModelSerializer):
         fields = ('id', 'photo', 'order')
 
 
+class OrderPhotoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    order = serializers.IntegerField()
+
+
 @extend_schema_serializer(
     examples=[
         OpenApiExample(
@@ -80,25 +85,76 @@ class AdSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        photos_data = validated_data.pop('photos')
         price_for_m2 = validated_data.get('price') / validated_data.get('total_area')
         instance = Ad.objects.create(
             **validated_data, user=self.context.get('request').user, price_for_m2=price_for_m2
         )
-        photos_data = validated_data.pop('photos', False)
         if photos_data:
             for photo_data in photos_data:
                 Photo.objects.create(ad=instance, photo=photo_data.get('photo'), order=photo_data.get('order'))
         return instance
 
 
+@extend_schema_serializer(
+    examples=[
+        OpenApiExample(
+            'Example 1',
+            value={
+                'address': 'Some Address 1',
+                'foundation_document': 'property',
+                'number_of_rooms': 'one-room',
+                'apartment_layout': 'studio',
+                'condition': 'rough',
+                'total_area': '80',
+                'kitchen_area': '20',
+                'balcony': 'yes',
+                'heating_type': 'gas',
+                'payment_option': 'mortgage',
+                'agent_commission': '1000',
+                'communication_method': 'email',
+                'description': 'Some description for this interesting ad',
+                'price': 4500000,
+                'photos_order': [
+                    {
+                        'id': 0,
+                        'order': 0
+                    }
+                ],
+                "photos": [
+                    # {
+                    #   "order": 1,
+                    #   "photo": generate_base64()
+                    # },
+                    # {
+                    #   "order": 2,
+                    #   "photo": generate_base64()
+                    # },
+                    # {
+                    #   "order": 3,
+                    #   "photo": generate_base64()
+                    # },
+                ],
+            },
+            request_only=True,
+            response_only=False,
+        ),
+    ],
+)
 class AdUpdateSerializers(serializers.ModelSerializer):
+    photos = PhotoSerializer(many=True)
+    order_photos = OrderPhotoSerializer(many=True)
+
     class Meta:
         model = Ad
         fields = (
             'id', 'address', 'foundation_document', 'number_of_rooms', 'apartment_layout', 'condition', 'total_area',
             'kitchen_area', 'balcony', 'heating_type', 'payment_option', 'agent_commission', 'communication_method',
-            'description', 'price'
+            'description', 'price', 'order_photos', 'photos'
         )
+        extra_kwargs = {
+            'order_photos': {'write_only': True},
+        }
 
     def validate(self, attrs):
         if attrs.get('total_area', False) and attrs.get('kitchen_area', False) \
@@ -109,9 +165,10 @@ class AdUpdateSerializers(serializers.ModelSerializer):
         return attrs
 
     def update(self, instance, validated_data):
+        print(validated_data)
         instance.price_for_m2 = validated_data.get('price') / validated_data.get('total_area')
         instance.save()
-        return super().update(instance, validated_data)
+        return instance
 # endregion Ad
 
 
