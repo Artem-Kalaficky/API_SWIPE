@@ -4,7 +4,7 @@ from dj_rest_auth.serializers import LoginSerializer
 from django.db import IntegrityError
 from rest_framework import serializers
 
-from users.models import Notary, UserProfile, Message, Filter, Photo, Ad
+from users.models import Notary, UserProfile, Message, Filter, Ad
 
 
 # region User Login and Registration
@@ -129,14 +129,14 @@ class MyFilterSerializer(serializers.ModelSerializer):
                 **validated_data, user=self.context.get('request').user
             )
         except IntegrityError:
-            raise serializers.ValidationError({'type_filter_error': 'Такой тип фильтр уже сохранён у пользователя.'})
+            raise serializers.ValidationError({'type_filter_error': 'Такой тип фильтра уже сохранён у пользователя.'})
         return instance
 
     def update(self, instance, validated_data):
         try:
             return super().update(instance, validated_data)
         except IntegrityError:
-            raise serializers.ValidationError({'type_filter_error': 'Такой тип фильтр уже сохранён у пользователя.'})
+            raise serializers.ValidationError({'type_filter_error': 'Такой тип фильтра уже сохранён у пользователя.'})
 # endregion MyFilters
 
 

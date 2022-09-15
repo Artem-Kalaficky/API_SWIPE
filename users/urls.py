@@ -24,9 +24,10 @@ urlpatterns = [
 
     # User Auth
     path('account/registration/account-confirm-email/<str:key>/', ConfirmEmailView.as_view()),
-    path('account/register/', RegisterView.as_view()),
-    path('account/login/', LoginView.as_view()),
+    path('account/register/', RegisterView.as_view(), name='register'),
+    path('account/login/', LoginView.as_view(), name='login'),
     path('account/verify-email/', VerifyEmailView.as_view(), name='rest_verify_email'),
     path('account/account-confirm-email/', VerifyEmailView.as_view(), name='account_email_verification_sent'),
     path('account/', include('allauth.urls')),
 ]
+

@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from users.models import Notary, UserProfile, Message, Filter, Ad
-from users.permissions import IsMyFilter
+from users.permissions import IsMyFilter, IsMyProfile
 
 from users.serializers import (
     NotarySerializer, UserProfileSerializer, UserSwitchNoticesSerializer, UserAgentContactsSerializer,
@@ -41,6 +41,7 @@ class NotaryViewSet(PsqMixin, ModelViewSet):
 class UserViewSet(GenericViewSet):
     queryset = UserProfile.objects.filter(is_staff=False, is_developer=False)
     serializer_class = UserProfileSerializer
+    permission_classes = [IsMyProfile]
 
     @extend_schema(description='Get personal data', methods=['get'])
     @action(detail=False)
