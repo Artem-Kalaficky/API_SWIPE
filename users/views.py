@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from users.models import Notary, UserProfile, Message, Filter, Ad
+from users.permissions import IsMyFilter, IsMyProfile
 
 from users.serializers import (
     NotarySerializer, UserProfileSerializer, UserSwitchNoticesSerializer, UserAgentContactsSerializer,
@@ -19,13 +20,6 @@ from users.serializers import (
     ModerationUserListSerializer, ModerationAdSerializer, MessageSerializer, MyFilterSerializer
 )
 from users.services.subscription_renewal import renew_subscription
-
-
-# region my Permissions
-class IsMyFilter(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return request.user == obj.user
-# endregion my Permissions
 
 
 # region Notaries
@@ -47,6 +41,7 @@ class NotaryViewSet(PsqMixin, ModelViewSet):
 class UserViewSet(GenericViewSet):
     queryset = UserProfile.objects.filter(is_staff=False, is_developer=False)
     serializer_class = UserProfileSerializer
+    permission_classes = [IsMyProfile]
 
     @extend_schema(description='Get personal data', methods=['get'])
     @action(detail=False)
@@ -142,8 +137,7 @@ class FilterViewSet(mixins.ListModelMixin,
     lookup_field = 'id'
 
     def get_queryset(self):
-        queryset = Filter.objects.filter(user=self.request.user) \
-            if self.request.user.is_authenticated else Filter.objects.all()
+        queryset = Filter.objects.filter(user=self.request.user)
         return queryset
 # endregion MyFilters
 
@@ -160,8 +154,10 @@ class ModerationUserListApiView(ListAPIView):
 
 class ModerationAdViewSet(mixins.ListModelMixin,
                           mixins.RetrieveModelMixin,
+                          mixins.UpdateModelMixin,
                           GenericViewSet):
-    queryset = Ad.objects.all()
+    queryset = Ad.objects.filter(is_disabled=False)
+    http_method_names = ["put", "get"]
     serializer_class = ModerationAdSerializer
     permission_classes = [IsAdminUser]
 # endregion Moderation
