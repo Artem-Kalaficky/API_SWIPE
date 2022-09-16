@@ -9,6 +9,12 @@ from users.models import Ad, House, Complaint, UserProfile, Photo
 
 
 # region Ad
+class ComplaintSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Complaint
+        fields = ('text', 'user')
+
+
 class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
@@ -20,13 +26,19 @@ class OrderPhotoSerializer(serializers.Serializer):
     order = serializers.IntegerField()
 
 
+class UserFavoritesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ('id',)
+
+
 @extend_schema_serializer(
     examples=[
         OpenApiExample(
             'Example 1',
             value={
                 'address': 'Some Address 1',
-                'house': 9,
+                'house': 1,
                 'foundation_document': 'property',
                 'purpose': 'apartment',
                 'number_of_rooms': 'one-room',
@@ -63,6 +75,8 @@ class OrderPhotoSerializer(serializers.Serializer):
 )
 class AdSerializer(serializers.ModelSerializer):
     photos = PhotoSerializer(many=True)
+    complaint = ComplaintSerializer(read_only=True, many=True)
+    favorites = UserFavoritesSerializer(read_only=True, many=True)
 
     class Meta:
         model = Ad
@@ -70,11 +84,11 @@ class AdSerializer(serializers.ModelSerializer):
             'id', 'address', 'house', 'foundation_document', 'purpose', 'number_of_rooms', 'apartment_layout',
             'condition', 'total_area', 'kitchen_area', 'balcony', 'heating_type', 'payment_option', 'agent_commission',
             'communication_method', 'description', 'price', 'photos', 'is_incorrect_price', 'is_incorrect_photo',
-            'is_incorrect_description', 'date_created', 'promotion', 'is_disabled'
+            'is_incorrect_description', 'date_created', 'promotion', 'complaint', 'is_disabled', 'favorites'
         )
         read_only_fields = (
             'is_incorrect_price', 'is_incorrect_photo', 'is_incorrect_description', 'date_created', 'promotion',
-            'is_disabled'
+            'is_disabled', 'complaint', 'favorites'
         )
         extra_kwargs = {
             'purpose': {'required': True}
@@ -190,6 +204,12 @@ class PromotionSerializers(serializers.ModelSerializer):
         read_only_fields = ('end_date',)
 
     def validate(self, attrs):
+        promotion = 0
+        for k in attrs:
+            if attrs[f'{k}'] is True or attrs[f'{k}'] != '':
+                promotion += 1
+        if promotion < 1:
+            raise serializers.ValidationError({'save_error': 'Условия продвижения не выбраны.'})
         if attrs.get('ad') not in self.context.get('request').user.ad.all():
             raise serializers.ValidationError(
                 {'ad': f"Недопустимый первичный ключ '{attrs.get('ad').id}' - объект не существует."},
@@ -209,19 +229,21 @@ class UpdatePromotionSerializers(serializers.ModelSerializer):
 
 # region Feed
 class FeedAdSerializer(serializers.ModelSerializer):
+    promotion = PromotionSerializers(read_only=True)
+
     class Meta:
         model = Ad
         fields = (
             'id', 'address', 'house', 'foundation_document', 'purpose', 'number_of_rooms', 'apartment_layout',
             'condition', 'total_area', 'kitchen_area', 'balcony', 'heating_type', 'payment_option', 'price',
-            'date_created'
+            'date_created', 'main_photo', 'promotion'
         )
 
 
 class FeedHouseSerializer(serializers.ModelSerializer):
     class Meta:
         model = House
-        fields = ('id', 'name', 'address', 'min_price', 'area_from')
+        fields = ('id', 'name', 'address', 'min_price', 'area_from', 'main_photo')
 
 
 class FeedAdComplaintSerializer(serializers.ModelSerializer):
