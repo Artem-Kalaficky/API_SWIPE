@@ -27,8 +27,12 @@ dumpdata:
 init_script:
 	$(MANAGE) create_users
 	$(MANAGE) create_developers
+	$(MANAGE) create_ads
 
 startapp:
 	$(MANAGE) migrate --no-input
 	$(MANAGE) collectstatic --no-input
-	gunicorn my_house24.wsgi:application --bind 0.0.0.0:8000
+	$(MANAGE) create_users
+	$(MANAGE) create_developers
+	$(MANAGE) create_ads
+	gunicorn api_swipe.wsgi:application --bind 0.0.0.0:8000

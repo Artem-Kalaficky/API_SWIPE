@@ -39,7 +39,8 @@ class Command(BaseCommand):
                 first_name='Иван',
                 last_name='Иванов',
                 email='admin@gmail.com',
-                is_superuser=True
+                is_superuser=True,
+                is_staff=True
             )
             save(user)
             self.stdout.write("Superuser successfully created")

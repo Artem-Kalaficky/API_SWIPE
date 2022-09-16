@@ -4,6 +4,7 @@ from dj_rest_auth.serializers import LoginSerializer
 from django.db import IntegrityError
 from rest_framework import serializers
 
+from ads.serializers import PhotoSerializer
 from users.models import Notary, UserProfile, Message, Filter, Ad
 
 
@@ -148,18 +149,20 @@ class ModerationUserListSerializer(serializers.ModelSerializer):
 
 
 class ModerationAdSerializer(serializers.ModelSerializer):
+    photos = PhotoSerializer(read_only=True, many=True)
+
     class Meta:
         model = Ad
         fields = (
             'id', 'address', 'house', 'foundation_document', 'purpose', 'number_of_rooms', 'apartment_layout',
             'condition', 'total_area', 'kitchen_area', 'balcony', 'heating_type', 'payment_option', 'agent_commission',
             'communication_method', 'description', 'price', 'is_incorrect_price', 'is_incorrect_photo',
-            'is_incorrect_description', 'date_created'
+            'is_incorrect_description', 'date_created', 'photos'
         )
         read_only_fields = (
             'address', 'house', 'foundation_document', 'purpose', 'number_of_rooms', 'apartment_layout',
             'condition', 'total_area', 'kitchen_area', 'balcony', 'heating_type', 'payment_option', 'agent_commission',
-            'communication_method', 'description', 'price'
+            'communication_method', 'description', 'price', 'photos'
         )
         extra_kwargs = {
             'is_incorrect_price': {'write_only': True},

@@ -30,7 +30,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     is_switch_to_agent = models.BooleanField(default=False, verbose_name='Переключить звонки и сообщения на агента')
     in_blacklist = models.BooleanField(default=False, verbose_name='В черном списке')
     houses = models.ManyToManyField('House', blank=True, verbose_name='Избранное(ЖК)')
-    ads = models.ManyToManyField('Ad', blank=True, verbose_name='Избранное(Объявления)')
+    ads = models.ManyToManyField('Ad', blank=True, verbose_name='Избранное(Объявления)', related_name='favorites')
     is_developer = models.BooleanField(default=False, verbose_name='Застройщик?')
 
     USERNAME_FIELD = 'email'
@@ -169,6 +169,10 @@ class House(models.Model):
     floor = models.PositiveIntegerField(verbose_name='Количество этажей', validators=[MaxValueValidator(50)])
     riser = models.PositiveIntegerField(verbose_name='Количество стояков', validators=[MaxValueValidator(4)])
 
+    @property
+    def main_photo(self):
+        return self.images.all().first().photo.url
+
     class Meta:
         verbose_name = 'ЖК'
         verbose_name_plural = 'ЖК'
@@ -230,6 +234,10 @@ class Ad(models.Model):
     date_created = models.DateField(auto_now_add=True)
     is_disabled = models.BooleanField(default=False, verbose_name='Отклонено')
 
+    @property
+    def main_photo(self):
+        return self.photos.all().first().photo.url
+
     class Meta:
         verbose_name = 'Объявление'
         verbose_name_plural = 'Объявления'
@@ -257,7 +265,7 @@ class Complaint(models.Model):
 
 
 class Apartment(models.Model):
-    ad = models.OneToOneField(Ad, on_delete=models.PROTECT, verbose_name='Объявление')
+    ad = models.OneToOneField(Ad, on_delete=models.CASCADE, verbose_name='Объявление')
     building = models.PositiveIntegerField(verbose_name='Корпус', blank=True, null=True)
     section = models.PositiveIntegerField(verbose_name='Секция', blank=True, null=True)
     floor = models.PositiveIntegerField(verbose_name='Этаж', blank=True, null=True)

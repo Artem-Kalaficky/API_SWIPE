@@ -23,7 +23,8 @@ from users.models import Ad, House, Complaint, UserProfile
 
 
 # region Ad and Promotion
-class AdViewSet(mixins.ListModelMixin,
+class AdViewSet(mixins.RetrieveModelMixin,
+                mixins.ListModelMixin,
                 mixins.CreateModelMixin,
                 mixins.DestroyModelMixin,
                 GenericViewSet):
@@ -35,16 +36,24 @@ class AdViewSet(mixins.ListModelMixin,
         queryset = Ad.objects.filter(user=self.request.user)
         return queryset
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        print(instance.favorites.all())
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
     def create(self, request, *args, **kwargs):
-        for p_dict in request.data.get('photos'):
-            p_dict['photo'] = ContentFile(base64.b64decode(p_dict['photo']), name='house.jpg')
+        if request.data.get('photos', False):
+            for p_dict in request.data.get('photos'):
+                p_dict['photo'] = ContentFile(base64.b64decode(p_dict['photo']), name='house.jpg')
         return super().create(request, *args, **kwargs)
 
     @extend_schema(description='Update Ad', methods=['put'])
     @action(detail=True, methods=['put'], serializer_class=AdUpdateSerializers)
     def update_ad(self, request, pk=None):
-        for p_dict in request.data.get('photos'):
-            p_dict['photo'] = ContentFile(base64.b64decode(p_dict['photo']), name='house.jpg')
+        if request.data.get('photos', False):
+            for p_dict in request.data.get('photos'):
+                p_dict['photo'] = ContentFile(base64.b64decode(p_dict['photo']), name='house.jpg')
         serializer = self.serializer_class(self.get_object(), data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()

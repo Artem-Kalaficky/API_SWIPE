@@ -4,7 +4,7 @@ from users.models import Apartment
 
 
 class ApartmentFilter(filters.FilterSet):
-    house = filters.NumberFilter(field_name="ad__house", required=True)
+    house = filters.NumberFilter(field_name="ad__house", required=False)
     min_price = filters.NumberFilter(field_name="ad__price", lookup_expr='gte')
     max_price = filters.NumberFilter(field_name="ad__price", lookup_expr='lte')
     min_price_for_m2 = filters.NumberFilter(field_name="ad__price_for_m2", lookup_expr='gte')
