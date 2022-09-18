@@ -112,27 +112,27 @@ WSGI_APPLICATION = 'api_swipe.wsgi.application'
 
 
 # Database
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'api_swipe',
-#         'USER': env('DB_USER'),
-#         'PASSWORD': env('DB_PASSWORD'),
-#         'HOST': 'localhost',
-#         'PORT': '',
-#     }
-# }
-
 DATABASES = {
-    "default": {
-        "ENGINE": env("SQL_ENGINE"),
-        "NAME": env("SQL_DATABASE"),
-        "USER": env("SQL_USER"),
-        "PASSWORD": env("SQL_PASSWORD"),
-        "HOST": env("SQL_HOST"),
-        "PORT": env("SQL_PORT"),
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'api_swipe',
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": env("SQL_ENGINE"),
+#         "NAME": env("SQL_DATABASE"),
+#         "USER": env("SQL_USER"),
+#         "PASSWORD": env("SQL_PASSWORD"),
+#         "HOST": env("SQL_HOST"),
+#         "PORT": env("SQL_PORT"),
+#     }
+# }
 
 ATOMIC_REQUESTS = True
 

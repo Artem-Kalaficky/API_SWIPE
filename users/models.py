@@ -60,10 +60,14 @@ class Filter(models.Model):
              ('three-room', 'Трехкомнатная'))
     number_of_rooms = models.CharField(max_length=32, choices=ROOMS, default='one-room', null=True, blank=True,
                                        verbose_name='Количество комнат')
-    price_from = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Цена от')
-    price_up_to = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Цена до')
-    area_from = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, verbose_name='Площадь от')
-    area_up_to = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, verbose_name='Площадь до')
+    price_from = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Цена от',
+                                     validators=[MinValueValidator(1)])
+    price_up_to = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Цена до',
+                                      validators=[MinValueValidator(1)])
+    area_from = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, verbose_name='Площадь от',
+                                    validators=[MinValueValidator(1)])
+    area_up_to = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, verbose_name='Площадь до',
+                                     validators=[MinValueValidator(1)])
     PURPOSES = (('apartment', 'Квартира'),
                 ('penthouse', 'Пентхаус'))
     purpose = models.CharField(max_length=32, choices=PURPOSES, default='apartment', null=True, blank=True,
