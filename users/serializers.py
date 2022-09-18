@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from ads.serializers import PhotoSerializer
 from users.models import Notary, UserProfile, Message, Filter, Ad
+from users.validators import validate_filter
 
 
 # region User Login and Registration
@@ -123,6 +124,10 @@ class MyFilterSerializer(serializers.ModelSerializer):
             'purchase_term', 'condition', 'is_save'
         )
         read_only_fields = ('id', 'user')
+
+    def validate(self, attrs):
+        validate_filter(attrs)
+        return attrs
 
     def create(self, validated_data):
         try:
