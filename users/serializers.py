@@ -9,7 +9,6 @@ from users.models import Notary, UserProfile, Message, Filter, Ad
 from users.validators import validate_filter
 
 
-# region User Login and Registration
 class MyLoginSerializer(LoginSerializer):
     username = None
     email = serializers.EmailField(required=True, allow_blank=True)

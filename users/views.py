@@ -2,7 +2,7 @@ from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_psq import Rule, PsqMixin
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import permissions, mixins, status
+from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
