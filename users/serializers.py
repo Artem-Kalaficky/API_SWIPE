@@ -52,7 +52,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = (
-            'id', 'first_name', 'last_name', 'telephone', 'email', 'agent_first_name', 'agent_last_name',
+            'id', 'first_name', 'last_name', 'telephone', 'email', 'avatar', 'agent_first_name', 'agent_last_name',
             'agent_telephone', 'agent_email', 'to_me', 'to_me_and_agent', 'to_agent', 'is_notices_disabled',
             'is_switch_to_agent', 'is_subscribed', 'is_auto_renewal', 'subscription_end_date'
         )

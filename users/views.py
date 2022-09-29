@@ -42,6 +42,7 @@ class UserViewSet(GenericViewSet):
     queryset = UserProfile.objects.filter(is_staff=False, is_developer=False)
     serializer_class = UserProfileSerializer
     permission_classes = [IsMyProfile]
+    parser_classes = (MultiPartParser,)
 
     @extend_schema(description='Get personal data', methods=['get'])
     @action(detail=False)

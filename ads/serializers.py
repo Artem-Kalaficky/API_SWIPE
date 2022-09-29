@@ -84,11 +84,12 @@ class AdSerializer(serializers.ModelSerializer):
             'id', 'address', 'house', 'foundation_document', 'purpose', 'number_of_rooms', 'apartment_layout',
             'condition', 'total_area', 'kitchen_area', 'balcony', 'heating_type', 'payment_option', 'agent_commission',
             'communication_method', 'description', 'price', 'photos', 'is_incorrect_price', 'is_incorrect_photo',
-            'is_incorrect_description', 'date_created', 'promotion', 'complaint', 'is_disabled', 'favorites'
+            'is_incorrect_description', 'date_created', 'promotion', 'complaint', 'is_disabled', 'favorites',
+            'main_photo'
         )
         read_only_fields = (
             'is_incorrect_price', 'is_incorrect_photo', 'is_incorrect_description', 'date_created', 'promotion',
-            'is_disabled', 'complaint', 'favorites'
+            'is_disabled', 'complaint', 'favorites', 'main_photo'
         )
         extra_kwargs = {
             'purpose': {'required': True}
