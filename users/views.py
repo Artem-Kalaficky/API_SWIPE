@@ -23,6 +23,7 @@ from users.services.subscription_renewal import renew_subscription
 
 
 # region Notaries
+@extend_schema(description='Permissions: (IsAuthenticated for GET list of notaries) & IsAdminUser)')
 class NotaryViewSet(PsqMixin, ModelViewSet):
     queryset = Notary.objects.all()
     http_method_names = ["put", "post", "get", "delete"]
@@ -38,19 +39,20 @@ class NotaryViewSet(PsqMixin, ModelViewSet):
 
 
 # region User Profile
+@extend_schema(description='Permissions: IsAuthenticated & IsMyProfile(only user, not admin or developer)')
 class UserViewSet(GenericViewSet):
     queryset = UserProfile.objects.filter(is_staff=False, is_developer=False)
     serializer_class = UserProfileSerializer
     permission_classes = [IsMyProfile]
     parser_classes = (MultiPartParser,)
 
-    @extend_schema(description='Get personal data', methods=['get'])
+    @extend_schema(methods=['get'])
     @action(detail=False)
     def my_profile(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
-    @extend_schema(description='Change personal contacts', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'], serializer_class=UserProfileSerializer)
     def change_my_contacts(self, request):
         serializer = self.serializer_class(request.user, data=request.data, partial=True)
@@ -58,7 +60,7 @@ class UserViewSet(GenericViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @extend_schema(description='Change contacts for personal agent', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'], serializer_class=UserAgentContactsSerializer)
     def change_agent_contacts(self, request):
         serializer = self.serializer_class(request.user, data=request.data, partial=True)
@@ -66,13 +68,13 @@ class UserViewSet(GenericViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @extend_schema(description='Subscription renewal', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'], serializer_class=UserSubscriptionRenewalSerializer)
     def renew_subscription(self, request):
         renew_subscription(request.user)
         return Response({'status': 'Подписка успешно продлена!'})
 
-    @extend_schema(description='Change status for subscription auto-renewal', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'], serializer_class=UserSubscriptionSerializer)
     def change_auto_renewal_status(self, request):
         serializer = self.serializer_class(request.user, data=request.data, partial=True)
@@ -80,7 +82,7 @@ class UserViewSet(GenericViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @extend_schema(description='Receiving notifications', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'], serializer_class=UserManageNoticeSerializer)
     def change_recipient_for_notices(self, request):
         serializer = self.serializer_class(request.user, data=request.data, partial=True)
@@ -88,7 +90,7 @@ class UserViewSet(GenericViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @extend_schema(description='Switch massages and calls to agent', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'], serializer_class=UserSwitchNoticesSerializer)
     def switch_calls_to_agent(self, request):
         serializer = self.serializer_class(request.user, data=request.data, partial=True)
@@ -99,6 +101,7 @@ class UserViewSet(GenericViewSet):
 
 
 # region Chats
+@extend_schema(description='Permissions: IsAuthenticated')
 class MessageViewSet(mixins.ListModelMixin,
                      mixins.CreateModelMixin,
                      GenericViewSet):
@@ -127,6 +130,7 @@ class MessageViewSet(mixins.ListModelMixin,
 
 
 # region Filters
+@extend_schema(description='Permissions: IsAuthenticated & IsMyFilter')
 class FilterViewSet(mixins.ListModelMixin,
                     mixins.RetrieveModelMixin,
                     mixins.CreateModelMixin,
@@ -144,8 +148,12 @@ class FilterViewSet(mixins.ListModelMixin,
 
 
 # region Moderation
-class ModerationUserListApiView(ListAPIView):
+@extend_schema(description='Permissions: IsAdminUser')
+class ModerationUserListApiView(mixins.ListModelMixin,
+                                mixins.UpdateModelMixin,
+                                GenericViewSet):
     queryset = UserProfile.objects.filter(is_staff=False, is_developer=False)
+    http_method_names = ["put", "get"]
     serializer_class = ModerationUserListSerializer
     permission_classes = [IsAdminUser]
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -153,6 +161,7 @@ class ModerationUserListApiView(ListAPIView):
     search_fields = ['first_name', 'last_name']
 
 
+@extend_schema(description='Permissions: IsAdminUser')
 class ModerationAdViewSet(mixins.ListModelMixin,
                           mixins.RetrieveModelMixin,
                           mixins.UpdateModelMixin,

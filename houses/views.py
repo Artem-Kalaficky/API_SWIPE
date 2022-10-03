@@ -20,19 +20,20 @@ from users.models import UserProfile, House, Apartment
 
 
 # region Developer Profile
+@extend_schema(description='Permissions: IsDeveloperUser')
 class DeveloperProfileViewSet(PsqMixin, GenericViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = DeveloperProfileSerializer
     parser_classes = (MultiPartParser,)
     permission_classes = [IsDeveloperUser]
 
-    @extend_schema(description='Get personal data', methods=['get'])
+    @extend_schema(methods=['get'])
     @action(detail=False)
     def my_profile(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
-    @extend_schema(description='Update main information of House', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'], serializer_class=HouseInformationSerializer)
     def update_house_information(self, request):
         serializer = self.serializer_class(request.user.house, data=request.data, partial=True)
@@ -40,7 +41,7 @@ class DeveloperProfileViewSet(PsqMixin, GenericViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @extend_schema(description='Update infrastructure information of House', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'], serializer_class=HouseInfrastructureSerializer)
     def update_house_infrastructure(self, request):
         serializer = self.serializer_class(request.user.house, data=request.data, partial=True)
@@ -48,7 +49,7 @@ class DeveloperProfileViewSet(PsqMixin, GenericViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @extend_schema(description='Update the "registration and payment" section', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'], serializer_class=HouseAgreementSerializer)
     def update_house_agreement(self, request):
         serializer = self.serializer_class(request.user.house, data=request.data, partial=True)
@@ -56,7 +57,7 @@ class DeveloperProfileViewSet(PsqMixin, GenericViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @extend_schema(description='Update information of sales department', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'], serializer_class=HouseSalesDepartmentSerializer)
     def update_house_sales_department(self, request):
         serializer = self.serializer_class(request.user.house, data=request.data, partial=True)
@@ -64,7 +65,7 @@ class DeveloperProfileViewSet(PsqMixin, GenericViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @extend_schema(description='Update information of advantages', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'], serializer_class=HouseAdvantageSerializer)
     def update_house_advantages(self, request):
         serializer = self.serializer_class(request.user.house.advantage, data=request.data, partial=True)
@@ -81,7 +82,7 @@ class DeveloperProfileViewSet(PsqMixin, GenericViewSet):
         return Response({'status': 'Картинки дома успешно обновлены.'})
 
 
-@extend_schema(tags=['house-documents'])
+@extend_schema(description='Permissions: IsDeveloperUser & IsMyContent', tags=['house-documents'])
 class HouseDocumentViewSet(mixins.CreateModelMixin,
                            mixins.UpdateModelMixin,
                            mixins.DestroyModelMixin,
@@ -93,7 +94,7 @@ class HouseDocumentViewSet(mixins.CreateModelMixin,
     permission_classes = [IsDeveloperUser & IsMyContent]
 
 
-@extend_schema(tags=['house-news'])
+@extend_schema(description='Permissions: IsDeveloperUser & IsMyContent', tags=['house-news'])
 class HouseNewsViewSet(mixins.CreateModelMixin,
                        mixins.UpdateModelMixin,
                        mixins.DestroyModelMixin,
@@ -105,7 +106,7 @@ class HouseNewsViewSet(mixins.CreateModelMixin,
     permission_classes = [IsDeveloperUser & IsMyContent]
 
 
-@extend_schema(tags=['house-add-requests'])
+@extend_schema(description='Permissions: IsDeveloperUser & IsMyRequest', tags=['house-add-requests'])
 class HouseAddRequestsViewSet(mixins.ListModelMixin,
                               mixins.UpdateModelMixin,
                               GenericViewSet):
@@ -121,7 +122,7 @@ class HouseAddRequestsViewSet(mixins.ListModelMixin,
 
 
 # region House Checkerboard
-@extend_schema(tags=['checkerboard'])
+@extend_schema(description='Permissions: IsAuthenticated', tags=['checkerboard'])
 class HouseCheckerboardViewSet(mixins.ListModelMixin,
                                mixins.RetrieveModelMixin,
                                GenericViewSet):
