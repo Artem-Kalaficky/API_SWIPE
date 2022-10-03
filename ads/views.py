@@ -23,6 +23,7 @@ from users.models import Ad, House, Complaint, UserProfile
 
 
 # region Ad and Promotion
+@extend_schema(description='Permissions: IsAuthenticated & IsMyAd')
 class AdViewSet(mixins.RetrieveModelMixin,
                 mixins.ListModelMixin,
                 mixins.CreateModelMixin,
@@ -48,7 +49,7 @@ class AdViewSet(mixins.RetrieveModelMixin,
                 p_dict['photo'] = ContentFile(base64.b64decode(p_dict['photo']), name='house.jpg')
         return super().create(request, *args, **kwargs)
 
-    @extend_schema(description='Update Ad', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=True, methods=['put'], serializer_class=AdUpdateSerializers)
     def update_ad(self, request, pk=None):
         if request.data.get('photos', False):
@@ -60,7 +61,7 @@ class AdViewSet(mixins.RetrieveModelMixin,
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@extend_schema(tags=['promotions-for-ads'])
+@extend_schema(description='Permissions: IsAuthenticated & IsMyAd', tags=['promotions-for-ads'])
 class PromotionViewSet(mixins.CreateModelMixin,
                        mixins.RetrieveModelMixin,
                        GenericViewSet):
@@ -68,7 +69,7 @@ class PromotionViewSet(mixins.CreateModelMixin,
     serializer_class = PromotionSerializers
     permission_classes = [IsAuthenticated & IsMyPromotion]
 
-    @extend_schema(description='Update promotion for Ad', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=True, methods=['put'], serializer_class=UpdatePromotionSerializers)
     def update_promotion(self, request, pk=None):
         serializer = self.serializer_class(self.get_object(), data=request.data, partial=True)
@@ -79,6 +80,7 @@ class PromotionViewSet(mixins.CreateModelMixin,
 
 
 # region Feed
+@extend_schema(description='Permissions: IsAuthenticated')
 class FeedListApiView(ListAPIView):
     queryset = Ad.objects.filter(is_disabled=False)
     serializer_class = FeedAdSerializer
@@ -92,16 +94,19 @@ class FeedListApiView(ListAPIView):
         return Response(serializer.data + house_serializer.data)
 
 
+@extend_schema(description='Permissions: IsAuthenticated')
 class HouseCardRetrieveApiView(RetrieveAPIView):
     queryset = House.objects.all()
     serializer_class = HouseSerializer
 
 
+@extend_schema(description='Permissions: IsAuthenticated')
 class AdCardRetrieveApiView(RetrieveAPIView):
     queryset = Ad.objects.filter(is_disabled=False)
     serializer_class = FeedAdSerializer
 
 
+@extend_schema(description='Permissions: IsAuthenticated')
 class AdComplaintCreateApiView(CreateAPIView):
     queryset = Complaint.objects.all()
     serializer_class = FeedAdComplaintSerializer
@@ -109,6 +114,7 @@ class AdComplaintCreateApiView(CreateAPIView):
 
 
 # region Favorites
+@extend_schema(description='Permissions: IsAuthenticated')
 class FavoritesAdListAPIView(ListAPIView):
     serializer_class = FeedAdSerializer
 
@@ -117,6 +123,7 @@ class FavoritesAdListAPIView(ListAPIView):
         return queryset
 
 
+@extend_schema(description='Permissions: IsAuthenticated')
 class FavoritesHouseListAPIView(ListAPIView):
     serializer_class = FeedHouseSerializer
 
@@ -125,11 +132,12 @@ class FavoritesHouseListAPIView(ListAPIView):
         return queryset
 
 
+@extend_schema(description='Permissions: IsAuthenticated')
 class FavoritesAddApiView(GenericViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = FavoritesAddSerializer
 
-    @extend_schema(description='Add Ad or House to User Favorites', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'])
     def add(self, request):
         serializer = self.serializer_class(request.user, data=request.data, partial=True)
@@ -138,11 +146,12 @@ class FavoritesAddApiView(GenericViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@extend_schema(description='Permissions: IsAuthenticated')
 class FavoritesDeleteApiView(GenericViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = FavoritesRemoveSerializer
 
-    @extend_schema(description='Remove Ad or House from User Favorites', methods=['put'])
+    @extend_schema(methods=['put'])
     @action(detail=False, methods=['put'])
     def remove(self, request, *args, **kwargs):
         serializer = self.serializer_class(request.user, data=request.data, partial=True)

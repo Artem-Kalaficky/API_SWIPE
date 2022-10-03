@@ -149,7 +149,8 @@ class MyFilterSerializer(serializers.ModelSerializer):
 class ModerationUserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ('first_name', 'last_name', 'telephone', 'email', 'in_blacklist')
+        fields = ('id', 'first_name', 'last_name', 'telephone', 'email', 'in_blacklist')
+        read_only_fields = ('first_name', 'last_name', 'telephone', 'email')
 
 
 class ModerationAdSerializer(serializers.ModelSerializer):
