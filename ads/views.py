@@ -37,9 +37,13 @@ class AdViewSet(mixins.RetrieveModelMixin,
         queryset = Ad.objects.filter(user=self.request.user)
         return queryset
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        return super(AdViewSet, self).list(request, args, kwargs) if queryset \
+            else Response({'response': 'User has not ads'}, status=status.HTTP_200_OK)
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        print(instance.favorites.all())
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
