@@ -163,7 +163,7 @@ ACCOUNT_USERNAME_REQUIRED = False
 
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
-LOGIN_URL = 'http://127.0.0.1:8000/docs/schema/swagger-ui/#/account/account_login_create'
+LOGIN_URL = 'http://192.241.142.246/account/login/'
 
 AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',

@@ -5,7 +5,6 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
