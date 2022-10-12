@@ -30,7 +30,7 @@ def validate_apartment(house, apartment):
             riser=apartment.get('riser'),
             number=apartment.get('number'),
             ad__house=house,
-            is_reserved=apartment.get('is_reserved')
+            is_reserved=True
         )
         raise serializers.ValidationError({'apartment_arror': 'Квартира с такими данными уже существует в этом доме.'})
     except ObjectDoesNotExist:
@@ -41,7 +41,7 @@ def validate_apartment(house, apartment):
             number=apartment.get('number'),
             building=apartment.get('building'),
             ad__house=house,
-            is_reserved=apartment.get('is_reserved')
+            is_reserved=True
         )
         raise serializers.ValidationError({'number_error': 'Квартира с таким номером уже существует в этом корпусе.'})
     except ObjectDoesNotExist:
