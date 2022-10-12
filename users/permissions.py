@@ -8,5 +8,9 @@ class IsMyFilter(permissions.BasePermission):
 
 class IsMyProfile(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser is False and request.user.is_staff is False \
+        try:
+            permission = request.user.is_superuser is False and request.user.is_staff is False \
                and request.user.is_developer is False
+        except AttributeError:
+            permission = False
+        return permission

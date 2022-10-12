@@ -105,8 +105,8 @@ class Message(models.Model):
 class Notary(models.Model):
     first_name = models.CharField(max_length=64, verbose_name='Имя')
     last_name = models.CharField(max_length=64, verbose_name='Фамилия')
-    telephone = PhoneNumberField(null=True, blank=True, verbose_name='Телефон')
-    email = models.EmailField(verbose_name='E-mail')
+    telephone = PhoneNumberField(null=True, blank=True, verbose_name='Телефон', unique=True)
+    email = models.EmailField(verbose_name='E-mail', unique=True)
     avatar = models.ImageField(upload_to='gallery/', null=True, blank=True, verbose_name='Аватар')
 
     class Meta:
@@ -262,7 +262,7 @@ class Photo(models.Model):
 class Complaint(models.Model):
     ad = models.ForeignKey(Ad, on_delete=models.CASCADE, related_name='complaint', verbose_name='Объявление')
     text = models.TextField(verbose_name='Текст жалобы')
-    user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, verbose_name='Пользователь')
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, verbose_name='Пользователь')
 
     class Meta:
         verbose_name = 'Жалоба'

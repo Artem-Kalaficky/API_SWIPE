@@ -5,7 +5,7 @@ from django.db import IntegrityError
 from rest_framework import serializers
 
 from ads.serializers import PhotoSerializer
-from users.models import Notary, UserProfile, Message, Filter, Ad
+from users.models import Notary, UserProfile, Message, Filter, Ad, Complaint
 from users.validators import validate_filter
 
 
@@ -153,8 +153,16 @@ class ModerationUserListSerializer(serializers.ModelSerializer):
         read_only_fields = ('first_name', 'last_name', 'telephone', 'email')
 
 
+class ComplaintSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Complaint
+        fields = ('id', 'text', 'user')
+        read_only_fields = ('text', 'user')
+
+
 class ModerationAdSerializer(serializers.ModelSerializer):
     photos = PhotoSerializer(read_only=True, many=True)
+    complaint = ComplaintSerializer(read_only=True, many=True)
 
     class Meta:
         model = Ad
@@ -162,7 +170,7 @@ class ModerationAdSerializer(serializers.ModelSerializer):
             'id', 'address', 'house', 'foundation_document', 'purpose', 'number_of_rooms', 'apartment_layout',
             'condition', 'total_area', 'kitchen_area', 'balcony', 'heating_type', 'payment_option', 'agent_commission',
             'communication_method', 'description', 'price', 'is_incorrect_price', 'is_incorrect_photo',
-            'is_incorrect_description', 'date_created', 'photos'
+            'is_incorrect_description', 'date_created', 'photos', 'complaint'
         )
         read_only_fields = (
             'address', 'house', 'foundation_document', 'purpose', 'number_of_rooms', 'apartment_layout',
