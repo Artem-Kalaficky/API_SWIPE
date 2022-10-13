@@ -189,7 +189,8 @@ class AdUpdateSerializers(serializers.ModelSerializer):
         if photos_data:
             for photo_data in photos_data:
                 Photo.objects.create(ad=instance, photo=photo_data.get('photo'), order=photo_data.get('order'))
-        instance.price_for_m2 = validated_data.get('price') / validated_data.get('total_area')
+        if validated_data.get('price') and validated_data.get('total_area'):
+            instance.price_for_m2 = validated_data.get('price') / validated_data.get('total_area')
         return super().update(instance, validated_data)
 # endregion Ad
 
