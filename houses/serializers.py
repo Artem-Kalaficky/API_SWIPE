@@ -7,6 +7,12 @@ from users.models import UserProfile, House, Apartment, Ad
 
 
 # region Developer Profile
+class DeveloperAvatarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ('avatar',)
+
+
 class AdvantagesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Advantage

@@ -23,7 +23,8 @@ from users.models import Ad, House, Complaint, UserProfile
 
 
 # region Ad and Promotion
-@extend_schema(description='Permissions: IsAuthenticated & IsMyAd')
+@extend_schema(methods=['PUT'], description='Permissions: IsAuthenticated & IsMyAd.\nUpdate ad by id. All images in base64. Set order for existing images in "photos_order" field')
+@extend_schema(methods=['DELETE'], description='Permissions: IsAuthenticated & IsMyAd.\nDelete ad of user by id.')
 class AdViewSet(mixins.RetrieveModelMixin,
                 mixins.ListModelMixin,
                 mixins.CreateModelMixin,
@@ -37,16 +38,19 @@ class AdViewSet(mixins.RetrieveModelMixin,
         queryset = Ad.objects.filter(user=self.request.user)
         return queryset
 
+    @extend_schema(description='Permissions: IsAuthenticated & IsMyAd.\nGet all ads for current user.')
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         return super(AdViewSet, self).list(request, args, kwargs) if queryset \
             else Response({'response': 'User has not ads'}, status=status.HTTP_200_OK)
 
+    @extend_schema(description='Permissions: IsAuthenticated & IsMyAd.\nGet ad of user by id.')
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
+    @extend_schema(description='Permissions: IsAuthenticated & IsMyAd.\nCreate ad. Set order for image. Image in base64')
     def create(self, request, *args, **kwargs):
         if request.data.get('photos', False):
             for p_dict in request.data.get('photos'):
@@ -65,7 +69,10 @@ class AdViewSet(mixins.RetrieveModelMixin,
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@extend_schema(description='Permissions: IsAuthenticated & IsMyAd', tags=['promotions-for-ads'])
+@extend_schema(tags=['promotions-for-ads'])
+@extend_schema(methods=['POST'], description='Permissions: IsAuthenticated & IsMyPromotion.\nCreate promotion for ad by ad id.')
+@extend_schema(methods=['GET'], description='Permissions: IsAuthenticated & IsMyPromotion.\nGet promotion for ad by promotion id.')
+@extend_schema(methods=['PUT'], description='Permissions: IsAuthenticated & IsMyPromotion.\nUpdate promotion for ad by promotion id.')
 class PromotionViewSet(mixins.CreateModelMixin,
                        mixins.RetrieveModelMixin,
                        GenericViewSet):
@@ -84,7 +91,7 @@ class PromotionViewSet(mixins.CreateModelMixin,
 
 
 # region Feed
-@extend_schema(description='Permissions: IsAuthenticated')
+@extend_schema(description='Permissions: IsAuthenticated.\nGet all ads and house. You can filter this list')
 class FeedListApiView(ListAPIView):
     queryset = Ad.objects.filter(is_disabled=False)
     serializer_class = FeedAdSerializer
@@ -98,19 +105,19 @@ class FeedListApiView(ListAPIView):
         return Response(serializer.data + house_serializer.data)
 
 
-@extend_schema(description='Permissions: IsAuthenticated')
+@extend_schema(description='Permissions: IsAuthenticated.\nGet house card by id.')
 class HouseCardRetrieveApiView(RetrieveAPIView):
     queryset = House.objects.all()
     serializer_class = HouseSerializer
 
 
-@extend_schema(description='Permissions: IsAuthenticated')
+@extend_schema(description='Permissions: IsAuthenticated.\nGet ad card by id.')
 class AdCardRetrieveApiView(RetrieveAPIView):
     queryset = Ad.objects.filter(is_disabled=False)
     serializer_class = FeedAdSerializer
 
 
-@extend_schema(description='Permissions: IsAuthenticated')
+@extend_schema(description='Permissions: IsAuthenticated.\nCreate complaint on ad by id')
 class AdComplaintCreateApiView(CreateAPIView):
     queryset = Complaint.objects.all()
     serializer_class = FeedAdComplaintSerializer
@@ -118,7 +125,7 @@ class AdComplaintCreateApiView(CreateAPIView):
 
 
 # region Favorites
-@extend_schema(description='Permissions: IsAuthenticated')
+@extend_schema(description='Permissions: IsAuthenticated.\nGet all featured ads for current user')
 class FavoritesAdListAPIView(ListAPIView):
     serializer_class = FeedAdSerializer
 
@@ -127,7 +134,7 @@ class FavoritesAdListAPIView(ListAPIView):
         return queryset
 
 
-@extend_schema(description='Permissions: IsAuthenticated')
+@extend_schema(description='Permissions: IsAuthenticated.\nGet all featured houses for current user')
 class FavoritesHouseListAPIView(ListAPIView):
     serializer_class = FeedHouseSerializer
 
@@ -136,7 +143,7 @@ class FavoritesHouseListAPIView(ListAPIView):
         return queryset
 
 
-@extend_schema(description='Permissions: IsAuthenticated')
+@extend_schema(description='Permissions: IsAuthenticated.\nFor current user add new house or ad in favorites by id.')
 class FavoritesAddApiView(GenericViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = FavoritesAddSerializer
@@ -150,7 +157,7 @@ class FavoritesAddApiView(GenericViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@extend_schema(description='Permissions: IsAuthenticated')
+@extend_schema(description='Permissions: IsAuthenticated.\nFor current user delete house or ad from favorites by id.')
 class FavoritesDeleteApiView(GenericViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = FavoritesRemoveSerializer

@@ -1,7 +1,10 @@
+import re
+
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator, BaseValidator
 from django.db import models
 from django.utils import timezone
+from django.utils.deconstruct import deconstructible
 from phonenumber_field.modelfields import PhoneNumberField
 
 from .managers import CustomUserManager
@@ -12,12 +15,36 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateField(default=timezone.now)
-    first_name = models.CharField(max_length=64, blank=True, verbose_name='Имя')
-    last_name = models.CharField(max_length=64, blank=True, verbose_name='Фамилия')
+    first_name = models.CharField(max_length=64, blank=True, verbose_name='Имя', validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
+    last_name = models.CharField(max_length=64, blank=True, verbose_name='Фамилия', validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
     telephone = PhoneNumberField(null=True, blank=True, verbose_name='Телефон')
     avatar = models.ImageField(upload_to='gallery/', null=True, blank=True, verbose_name='Аватар')
-    agent_first_name = models.CharField(max_length=64, null=True, blank=True, verbose_name='Имя агента')
-    agent_last_name = models.CharField(max_length=64, null=True, blank=True, verbose_name='Фамилия агента')
+    agent_first_name = models.CharField(max_length=64, null=True, blank=True, verbose_name='Имя агента', validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
+    agent_last_name = models.CharField(max_length=64, null=True, blank=True, verbose_name='Фамилия агента', validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
     agent_telephone = PhoneNumberField(null=True, blank=True, verbose_name='Телефон агента')
     agent_email = models.EmailField(null=True, blank=True, verbose_name='E-mail агента')
     is_subscribed = models.BooleanField(default=False, verbose_name='Подписан?')
@@ -103,8 +130,20 @@ class Message(models.Model):
 
 
 class Notary(models.Model):
-    first_name = models.CharField(max_length=64, verbose_name='Имя')
-    last_name = models.CharField(max_length=64, verbose_name='Фамилия')
+    first_name = models.CharField(max_length=64, verbose_name='Имя', validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
+    last_name = models.CharField(max_length=64, verbose_name='Фамилия', validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
     telephone = PhoneNumberField(null=True, blank=True, verbose_name='Телефон', unique=True)
     email = models.EmailField(verbose_name='E-mail', unique=True)
     avatar = models.ImageField(upload_to='gallery/', null=True, blank=True, verbose_name='Аватар')
@@ -120,13 +159,31 @@ class Notary(models.Model):
 class House(models.Model):
     user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, verbose_name='Застройщик', null=True,
                                 related_name='house')
-    name = models.CharField(max_length=64, verbose_name='Название ЖК')
-    address = models.CharField(max_length=64, verbose_name='Адрес ЖК')
+    name = models.CharField(max_length=64, verbose_name='Название ЖК', validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
+    address = models.CharField(max_length=64, verbose_name='Адрес ЖК', validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
     min_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Мин. цена')
     price_for_m2 = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена за m2')
     area_from = models.DecimalField(default=15, max_digits=6, decimal_places=2, verbose_name='Площади от')
     area_up_to = models.DecimalField(default=100, max_digits=6, decimal_places=2, verbose_name='Площади до')
-    description = models.TextField(verbose_name='Описание ЖК')
+    description = models.TextField(verbose_name='Описание ЖК', validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
     STATUSES = (('apartment', 'Квартиры'),)
     house_status = models.CharField(max_length=32, choices=STATUSES, default='apartment', verbose_name='Статус ЖК')
     TYPES = (('multi', 'Многоквартирный'),)
@@ -164,8 +221,20 @@ class House(models.Model):
     SUMS = (('full', 'Полная'),
             ('incomplete', 'Неполная'))
     amount_in_contract = models.CharField(max_length=32, choices=SUMS, default='full', verbose_name='Сумма в договоре')
-    department_first_name = models.CharField(max_length=64, verbose_name='Имя', blank=True)
-    department_last_name = models.CharField(max_length=64, verbose_name='Фамилия', blank=True)
+    department_first_name = models.CharField(max_length=64, verbose_name='Имя', blank=True, validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
+    department_last_name = models.CharField(max_length=64, verbose_name='Фамилия', blank=True, validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
     department_telephone = PhoneNumberField(null=True, blank=True, verbose_name='Телефон')
     department_email = models.EmailField(verbose_name='E-mail', blank=True)
     building = models.PositiveIntegerField(verbose_name='Количество корпусов', validators=[MaxValueValidator(4)])
@@ -187,7 +256,13 @@ class House(models.Model):
 
 class Ad(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='ad')
-    address = models.CharField(max_length=64, verbose_name='Адрес')
+    address = models.CharField(max_length=64, verbose_name='Адрес', validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
     house = models.ForeignKey('House', on_delete=models.CASCADE, null=True, blank=True, verbose_name='ЖК')
     DOCUMENTS = (('property', 'Собственность'),)
     foundation_document = models.CharField(max_length=32, choices=DOCUMENTS, default='property', null=True, blank=True,
@@ -229,7 +304,13 @@ class Ad(models.Model):
                ('telephone', 'Звонок'))
     communication_method = models.CharField(max_length=32, choices=METHODS, default='email', null=True, blank=True,
                                             verbose_name='Способ связи')
-    description = models.TextField(verbose_name='Описание')
+    description = models.TextField(verbose_name='Описание', validators=[
+        RegexValidator(
+            regex=re.compile('[@_!#$%^&*<>?/\\\|}{~]'),
+            message='Special characters are not allowed.',
+            inverse_match=True
+        )
+    ])
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена', validators=[MinValueValidator(1)])
     price_for_m2 = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена за m2')
     is_incorrect_price = models.BooleanField(default=False, verbose_name='Некорректная цена')
@@ -283,6 +364,7 @@ class Apartment(models.Model):
         verbose_name = 'Квартира'
         verbose_name_plural = 'Квартиры'
         unique_together = ['building', 'section', 'floor', 'riser', 'number', 'ad']
+        ordering = ['-id']
 
 
 
